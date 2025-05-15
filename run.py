@@ -73,6 +73,8 @@ from typing import Dict, List, Tuple
 import openai
 import pandas as pd
 from tqdm import tqdm
+from transformers import AutoTokenizer
+from vllm import LLM, SamplingParams
 
 
 FIXED_SEEDS = [93187, 95617, 98473, 101089, 103387]
@@ -236,9 +238,6 @@ def _annotate_row(
             content = resp.choices[0].message.content
             ts = resp.created
         else:            # local Llama-3.1 via vLLM
-            from transformers import AutoTokenizer
-            from vllm import LLM, SamplingParams
-
             prompt = tokenizer.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
@@ -314,6 +313,7 @@ def main() -> None:
     is_llama = model_tag == "llama"
     tokenizer = llm = None
     if is_llama:
+
         tokenizer = AutoTokenizer.from_pretrained(args.model)
         llm = LLM(model=args.model, dtype="auto")  # single H100 assumed
 
