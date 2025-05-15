@@ -50,10 +50,13 @@ Key features:
 Usage:
     python run.py [--xlsx path/to/file.xlsx] [--model MODEL] [--max_tries N] [--debug]
     [--cot]
+
+Note:
+    We only support a family of local model (i.e., Llama-3.1) and OpenAI models.
 """
 
 __author__ = "The AInotator authors"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __license__ = "MIT"
 
 
@@ -67,6 +70,8 @@ from typing import Dict, List, Tuple
 import openai
 import pandas as pd
 from tqdm import tqdm
+from transformers import AutoTokenizer
+from vllm import LLM, SamplingParams
 
 
 FIXED_SEEDS = [93187, 95617, 98473, 101089, 103387]
@@ -134,24 +139,24 @@ def _build_messages(
 def _parse_annotation(text: str) -> Dict:
     """Extract reasoning (optional) and the JSON annotation; validate all fields."""
 
-    # -------- REASON block (optional) --------
+    # REASON block (optional)
     reason = ""
     if REASON_START in text and REASON_END in text:
         reason = text.split(REASON_START, 1)[1].split(REASON_END, 1)[0].strip()
 
-    # -------- ANNOT block (required) ---------
+    # ANNOT block (required)
     if START_TAG not in text or END_TAG not in text:
         raise ValueError("wrapper tags not found")
 
     json_str = text.split(START_TAG, 1)[1].split(END_TAG, 1)[0].strip()
     anno = json.loads(json_str)
 
-    # ---------- 1) communicative act ----------
+    # 1) communicative act
     act = str(anno.get("act", "")).strip()
     if act not in ALLOWED_ACTS:
         raise ValueError(f"invalid act: {act}")
 
-    # ---------- 2) politeness (+ optional subtype) ----------
+    # 2) politeness (+ optional subtype)
     raw_pol = str(anno.get("politeness", "") or "")
     raw_pol = raw_pol.replace("–", "-").replace("—", "-").strip()
 
@@ -171,7 +176,7 @@ def _parse_annotation(text: str) -> Dict:
     if pol and pol not in ALLOWED_POLITENESS:
         raise ValueError(f"invalid politeness: {pol}")
 
-    # ---------- 3) meta tags ----------
+    # 3) meta tags
     combined_meta = ", ".join(filter(None, [meta_field, meta_from_pol]))
     clean_meta: List[str] = []
     for tag in [t.strip() for t in combined_meta.split(",") if t.strip()]:
@@ -184,7 +189,6 @@ def _parse_annotation(text: str) -> Dict:
     return {"act": act, "politeness": pol, "meta": meta, "reason": reason}
 
 
-
 def _annotate_row(
     row_idx: int,
     df: pd.DataFrame,
@@ -194,14 +198,21 @@ def _annotate_row(
     include_cot: bool,
     global_context: str,
     user_meta: str,
+    llm=None,
+    tokenizer=None,
 ) -> Tuple[Dict, List[Dict]]:
-    """Annotate a single DataFrame row, retrying with seeded offsets."""
+    """Annotate one DataFrame row, retrying with incremental seeds.
+    Works with either OpenAI chat models (gpt-4o, o3) or a local vLLM
+    instance of Llama-3.1-8B-Instruct.
+    """
     raw_records: List[Dict] = []
+
     prev_msg = df.at[row_idx - 1, "Message"] if row_idx > 0 else ""
     targ_msg = df.at[row_idx,     "Message"]
     next_msg = df.at[row_idx + 1, "Message"] if row_idx < len(df) - 1 else ""
 
     base_seed = FIXED_SEEDS[0]
+
     for attempt in range(max_tries):
         seed = base_seed + attempt
         messages = _build_messages(
@@ -211,21 +222,41 @@ def _annotate_row(
             global_context,
             user_meta,
         )
-        resp = openai.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.7,
-            top_p=0.95,
-            seed=seed,
-        )
-        content = resp.choices[0].message.content
+
+        # inference
+        if llm is None:  # OpenAI endpoint (gpt-4o / o3)
+            resp = openai.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.7,
+                top_p=0.95,
+                seed=seed,
+            )
+            content = resp.choices[0].message.content
+            ts = resp.created
+        else:            # local Llama-3.1 via vLLM
+            prompt = tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            out = llm.generate(
+                [prompt],
+                sampling_params=SamplingParams(
+                    temperature=0.7,
+                    top_p=0.95,
+                    seed=seed,
+                ),
+            )[0].outputs[0]
+            content = out.text
+            ts = time.time()
+
         raw_records.append({
-            "row_idx":    row_idx,
-            "seed":       seed,
-            "prompt":     json.dumps(messages, ensure_ascii=False),
-            "response":   content,
-            "timestamp":  resp.created,
+            "row_idx":   row_idx,
+            "seed":      seed,
+            "prompt":    json.dumps(messages, ensure_ascii=False),
+            "response":  content,
+            "timestamp": ts,
         })
+
         try:
             anno = _parse_annotation(content)
             anno.update({"row_idx": row_idx, "seed": seed})
@@ -238,21 +269,22 @@ def _annotate_row(
 
 
 def main() -> None:
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--xlsx",      default="data/Yusra_politeness.sch.copy.xlsx")
-    parser.add_argument("--model",     default="gpt-4o-2024-08-06")
+    parser.add_argument("--xlsx", default="data/Yusra_politeness.sch.copy.xlsx")
+    parser.add_argument("--model", default="gpt-4o-2024-08-06")
     parser.add_argument("--max_tries", type=int, default=20)
-    parser.add_argument("--debug",     action="store_true")
-    parser.add_argument("--cot",       action="store_true")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--cot", action="store_true")
     args = parser.parse_args()
 
-    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s",
+                        level=logging.INFO)
     logging.info("Starting annotation run")
 
-    # load data once
     df = pd.read_excel(args.xlsx, engine="openpyxl")
 
-    # build dynamic global context: a brief background + all Msg# == 1 posts
+    # dynamic global context
     first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
     thread_summary = (
         "Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they "
@@ -265,18 +297,34 @@ def main() -> None:
         "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts)
     ])
 
+    # model tag & local / remote setup
+    if args.model.startswith("gpt-4o"):
+        model_tag = "gpt-4o"
+    elif args.model.startswith("o3"):
+        model_tag = "o3"
+    elif "llama" in args.model.lower():
+        model_tag = "llama"
+    else:
+        raise ValueError('Unknown model. Only support Llama-3.1 and OpenAI API.')
+
+    is_llama = model_tag == "llama"
+    tokenizer = llm = None
+    if is_llama:
+        tokenizer = AutoTokenizer.from_pretrained(args.model)
+        llm = LLM(model=args.model, dtype="auto")  # single H100 assumed
+
     primary_seed = FIXED_SEEDS[0]
     cot_suffix = "_cot" if args.cot else ""
-    out_dir = Path("annotations") / f"seed_{primary_seed}{cot_suffix}"
+    out_dir = Path("annotations") / f"{model_tag}_seed_{primary_seed}{cot_suffix}"
     out_dir.mkdir(parents=True, exist_ok=True)
     logging.info(f"Output directory: {out_dir}")
 
-    # initialize annotation columns if missing
+    # init annotation columns
     for col in ("act", "politeness", "meta"):
         if col not in df.columns:
             df[col] = ""
 
-    # determine which rows to process
+    # rows to process
     todo_idx = df.index[~df["act"].astype(bool)]
     if args.debug:
         todo_idx = todo_idx[:10]
@@ -296,10 +344,12 @@ def main() -> None:
         try:
             anno, raws = _annotate_row(
                 idx, df, system_prompt, args.model, args.max_tries,
-                include_cot=args.cot, global_context=dynamic_global_context,
+                include_cot=args.cot,
+                global_context=dynamic_global_context,
                 user_meta=user_meta,
+                llm=llm,
+                tokenizer=tokenizer,
             )
-            # assign three columns in one go
             df.loc[idx, ["act", "politeness", "meta"]] = [
                 anno["act"], anno["politeness"], anno["meta"]
             ]
@@ -308,28 +358,30 @@ def main() -> None:
                 out_dir / "annot_clean.csv",
                 mode="a",
                 header=not (out_dir / "annot_clean.csv").exists(),
-                index=False
+                index=False,
             )
             pd.DataFrame(raws).to_csv(
                 out_dir / "annot_raw.csv",
-                mode="a", header=not (out_dir / "annot_raw.csv").exists(),
-                index=False
+                mode="a",
+                header=not (out_dir / "annot_raw.csv").exists(),
+                index=False,
             )
             df.iloc[[idx]].to_csv(
                 out_dir / "annot_seq.csv",
-                mode="a", header=not (out_dir / "annot_seq.csv").exists(),
-                index=False
+                mode="a",
+                header=not (out_dir / "annot_seq.csv").exists(),
+                index=False,
             )
 
             logging.info(f"Annotated row {idx}")
         except RuntimeError as exc:
             logging.error(exc)
-            # mark failed row to preserve row alignment
             df.loc[idx, ["act", "politeness", "meta"]] = ["__FAILED__", "", ""]
             df.iloc[[idx]].to_csv(
                 out_dir / "annot_seq.csv",
-                mode="a", header=not (out_dir / "annot_seq.csv").exists(),
-                index=False
+                mode="a",
+                header=not (out_dir / "annot_seq.csv").exists(),
+                index=False,
             )
 
     logging.info("Annotation run complete")
