@@ -1,0 +1,536 @@
+act,politeness,meta,reason,row_idx,seed
+Inform,,,,0,93187
+Inform,,,,1,93187
+Inform,,,,2,93187
+Inform,,,"The speaker is narrating factual events from their story: coming home and seeing their sister crying. This is providing factual information within the narrative. It is not simply subjective opinion (so not Claim), nor a directive, request, or reaction. Thus “Inform” fits best. No clear politeness or meta features present.",3,93187
+Inform,,,"This utterance is part of a narrative recounting past events. The speaker is providing factual information about what the sister conveyed and showed. That fits the Inform act. Because the utterance reports what the sister said (“She told me…”) it involves reported speech, so meta tag “[reported]”. There’s no clear politeness marker.",4,93187
+Claim,,,"The utterance “In that moment, I went dark.” is a subjective statement about the speaker’s internal emotional state. It is not seeking information, directing anyone, or giving verifiable factual data; rather, it asserts something personal and inherently unverifiable by others. That fits the definition of Claim (subjective assertion). There is no politeness or impoliteness marker, and no non-bona fide or reported speech.",5,93187
+Inform,,,"The speaker continues a chronological narrative, offering context for his later actions. The sentence states factual background about where he lived and the prevalence of guns among his friends. It is not asking for information (so not Inquire/Request), not giving directives, nor expressing desire or evaluation beyond describing circumstances. Hence the utterance functions to give factual information to the audience—best captured by the Inform label. The derogatory phrase “trailer trash” is descriptive of the locale, not an attack on the interlocutor, so no politeness tag is required. No sarcasm or reported speech present.",6,93187
+Inform,,,"The utterance is part of a chronological narrative recounting what the speaker did. It provides factual information about past events (“I went… told him… we got in the car…”). It’s not expressing personal opinion (Claim), not requesting or directing, nor elaborating on previous sentence. It is simply stating events, hence fits Inform. No politeness markers, no meta like sarcasm.",7,93187
+Inform,,,"The utterance narrates a factual event in the timeline of the story (“When he got home… my friend handed me the gun”). It supplies new, verifiable-in-principle information about what happened next. It is not expressing a stance (Claim), not requesting action (Direct/Request), nor paraphrasing a previous line (Elaborate). Therefore, the most fitting act is Inform. No politeness or meta cues are present.",8,93187
+Inform,,,,9,93187
+Inform,,,,10,93187
+Inform,,,,11,93187
+Inform,,,,12,93187
+Invite,,,"The target utterance is simply “AMA,” the Reddit shorthand for “Ask Me Anything.” 
+Possible labels:
+1. Invite – It explicitly invites the audience to participate by asking questions.
+2. Manage – Could be seen as opening the floor, managing discussion flow.
+
+Comparing: “Invite” is defined as seeking participation or acceptance. “AMA” directly encourages others to engage with questions, fitting this definition. “Manage” is more about structuring or organizing the discussion; while AMA does open the session, its primary function is to invite questions rather than administrate structure.
+
+No clear politeness markers (no praise, no rudeness, no hedging). Not non-bona fide.
+
+Therefore, the most fitting act is Invite.",13,93187
+Inquire,,,"The target utterance “How different was juvy from the rehab place?” is a question asking the original poster to provide information comparing two experiences.  
+Possible act labels:  
+1. Inquire – seeks information.  
+2. Request – could be seen as requesting action (answer), but in taxonomy, straightforward questions seeking information are “Inquire.”  
+3. Elaborate – no, it’s not explaining anything; it’s asking.  
+
+Thus, “Inquire” fits best.  
+Politeness: neutral; no explicit politeness strategies or impoliteness.  
+Meta: none.",14,93187
+Inquire,,,,15,93187
+Inform,,,,16,93187
+Inform,,,"The utterance is a descriptive statement about what the placement facility was like. It conveys factual information (or at least information presented as fact) to the reader. No request, no opinion/stance disagreement, no directive. Thus the best-fitting communicative act is Inform. There is no politeness or impoliteness marker evident, nor is it reported speech or sarcasm. Therefore: act = Inform, politeness = """", meta = """".",17,93187
+Claim,,,,18,93187
+Elaborate,,,,19,93187
+Claim,,,,20,93187
+Inquire,,,,21,93187
+Inform,,,,22,93187
+Inform,,,,23,93187
+Claim,,,,24,93187
+Reject,,,"Possible acts:
+1. Inquire – literal question asking for information about why it matters.
+2. Reject – rhetorical question challenging the relevance of the previous statement “so it all worked out,” implicitly disagreeing that it’s important.
+
+Given the context (responding immediately to someone concluding “so it all worked out”), the utterance functions more as a challenge, disputing the implied significance rather than sincerely seeking info. Therefore, Reject fits better than Inquire. No clear politeness or impoliteness markers. No meta.",25,93187
+Inform,,reported,,26,93187
+React,,,,27,93187
+Inform,,,,28,93187
+Inform,,,,29,93187
+Inform,,,,30,93187
+React,+P,,"The target utterance “That's cool,” follows a statement describing how someone eventually sided with the speaker. The phrase functions as a short supportive acknowledgment that positively evaluates the prior information. Two plausible act types:
+
+1. Accept – would indicate explicit agreement (“Yes, that is correct”).  
+2. React – signals engagement or emotional response (“Cool!”, “Wow!”).
+
+Since “That’s cool” is more of an evaluative reaction than a direct statement of agreement, React fits better. It carries a friendly, approving tone, which can be coded as positive politeness (+P). No reporting or non-bona fide elements are present.",31,93187
+React,+P,,,32,93187
+Claim,+P,,"Possible acts:
+1. Inform – stating a fact about the OP’s situation (“You had to choose…”).
+2. Claim – a subjective characterization of the OP’s dilemma; not strictly verifiable.
+Since this expresses the commenter’s empathetic assessment rather than an objectively verifiable fact, “Claim” fits better.
+Politeness: The sentence shows solidarity and empathy, a form of positive politeness (+P).
+No meta tags needed.",33,93187
+Claim,,,,34,93187
+Claim,+P,,,35,93187
+Inquire,,,,36,93187
+Inquire,,,,37,93187
+Inform,,,,38,93187
+Elaborate,,,"Possible acts: Inform (providing fact about visits), Elaborate (expanding on his previous statement about missing sister's growth). Since sentence begins with ""and still"", directly linking to prior statement, functioning to qualify and explain that despite missing growth they're still close. This explicitly elaborates previous message. Choose Elaborate. No politeness markers. No meta.",39,93187
+Claim,,,"The target utterance states: “But I just can’t help but feel bad for missing her formative years.”  
+Possible acts:  
+1) Claim – a subjective assertion about the speaker’s feelings (not objectively verifiable).  
+2) Apologize – could be seen as an apology, but the wording doesn’t directly apologize to someone; it merely expresses regret.  
+3) Desire – expresses a wish or hope? Not really; it’s reflecting current feelings, not a hypothetical want.  
+
+Given the definitions, “Claim” fits best: it’s a personal, subjective statement. There’s no directive or request, no factual information, nor overt apology.  
+Politeness: no explicit politeness strategy or impoliteness; it’s neutral.  
+Meta: no reported speech, no irony.",40,93187
+Inform,,,,41,93187
+Inquire,,,,42,93187
+Inquire,,,,43,93187
+Inform,,,,44,93187
+Inform,,,,45,93187
+Claim,,,,46,93187
+Elaborate,,,"The target “putting my sister and I’s health at risk.” expands on the previous clause “which made me really angry at my mom for telling us to ignore it,” explaining why that made him angry. This is an explanatory add-on to the speaker’s own prior statement, so it fits the “Elaborate” act. It is neither polite nor impolite, and there is no reported speech or non-bona-fide cue.",47,93187
+Inform,,,,48,93187
+Claim,,,,49,93187
+Apologize,+N,,"The speaker says: “I don’t mean to sound like a cold and unemotional person.”  
+This utterance does not present factual information or a request. Instead it anticipates that the forthcoming statement might be perceived negatively and offers a pre-emptive apology/hedge. Within the taxonomy, such humble or self-deprecating expressions fall under “Apologize.”  
+Politeness: It is a classic negative-politeness strategy (hedging to avoid imposition), coded +N.  
+No other meta tags apply.",50,93187
+Claim,,,,51,93187
+Claim,,,,52,93187
+React,+P,,"The utterance “I’m sorry you went thru this..” is not an apology for the speaker’s own wrongdoing; it’s an empathic expression of sympathy toward the addressee’s traumatic experience. That aligns best with “React,” which covers emotional engagement or listener response. It also conveys support/solidarity, so positive politeness (+P) applies. No special meta tags needed.",53,93187
+Direct,+P,,"The target utterance “count it as a blessing that your mental health has been good!” is in the imperative mood, telling the addressee to adopt a certain attitude (to “count it as a blessing”). That is an attempt to influence the addressee’s behavior/thoughts, fitting the “Direct” category (require/prohibit/advise). The tone is supportive and encouraging, so it demonstrates positive politeness (+P). No reporting or sarcasm present.",54,93187
+Greet,+P,,,55,93187
+Claim,,,"Possible acts: 
+1) Inform – stating verifiable fact? But “abusive” is evaluative; not objectively verifiable. 
+2) Claim – subjective assertion/opinion about the mother’s action. Fits.
+No commands, questions, etc. Politeness: no direct insult toward addressee, just describing mother’s behavior; so none. No non-bona fide.",56,93187
+React,+P,,"The utterance “and I don't blame you for what you did.” expresses empathy and support toward the original poster. It is not primarily providing new factual information (Inform) nor making a subjective assertion unrelated to interaction (Claim). It functions as a supportive response, indicating understanding and positive alignment rather than disagreement. This fits the “React” category, which covers expressions of engagement, approval, or emotional response. Because the comment conveys solidarity and reassurance, it constitutes positive politeness (+P). No non-bona fide or reported speech features are present.",57,93187
+Congratulate,+P,,"Possible acts:
+1) React – shows positive emotional response.
+2) Congratulate – expresses praise/good wishes for an achievement (patching things up).
+
+The utterance explicitly expresses happiness about a reconciliation, which is an accomplishment by the two parties. It’s more than a simple back-channel; it praises the result of their effort at repairing the relationship, aligning with the “Congratulate” definition. React is possible but more generic; Congratulate is the rarer, more specific fit.
+
+Politeness: The sentence is supportive and complimentary, a clear case of positive politeness (+P).
+
+No sarcasm or reported speech.
+
+Therefore: act = Congratulate, politeness = +P, meta = """".",58,93187
+Greet,+P,,"The utterance “I wish you nothing but the best in the future!” is directed at the previous poster, expressing goodwill and a positive wish.  
+Candidate acts:  
+1. Congratulate – typically praise/acknowledge an achievement (“Congrats on your promotion”). Here there’s no explicit praise for a specific achievement.  
+2. Greet – covers greeting, leave-taking, and general well-wishing. The utterance is a form of well-wishing, fitting this category.  
+3. Desire – expresses a want, hope, or speculation, but usually for oneself (“I wish I could …”). In this case the desire is for the addressee’s benefit and functions socially like a well-wish.
+
+Given the taxonomy, “Greet” (well-wishing) is most appropriate.  
+Politeness: it offers positive support and goodwill → +P (positive politeness).  
+No sarcasm or reported speech → meta = """".",59,93187
+Inform,,,,60,93187
+Claim,,,,61,93187
+Accept,,,,62,93187
+React,+P,,,63,93187
+Desire,,,"The utterance “I wish that our systems were more fictional and helped people.” expresses hope or desire for how things could be different (“I wish ...”). It does not ask for information, provide information, direct action, or react; it’s a subjective yearning. Thus the correct act is “Desire.” No clear politeness or meta markers present.",64,93187
+Direct,+P,,"The speaker says, “Self care is the best thing you can do for yourself in working in social services.” Although phrased declaratively, the functional intent is to give advice or recommendation—i.e., to influence the addressee’s future action (practice self-care). That fits the “Direct” category (attempt to cause action through strong advice). It’s also supportive and caring, which is positive politeness (+P). No humor or reporting present.",65,93187
+Claim,,,"The utterance “You will never repair the world but you can make small changes for individuals.” is asserting the speaker’s perspective on the limits and impact of social-service work. It does not explicitly direct action (“You must …”), but rather states a belief about what is (and isn’t) possible, encouraging realistic expectations. As such, it fits the “Claim” category: a subjective assertion that is not objectively verifiable. There is no clear politeness or impoliteness marker, and no reported speech or non-bona-fide stance.",66,93187
+Claim,,,,67,93187
+Congratulate,+P,,,68,93187
+Inquire,,,"Possible labels: Inquire (seeking information), Request (asking someone to do something). “How's your relationship with your sister now?” is a question whose primary purpose is to obtain information; it doesn’t ask for an action beyond answering. Therefore it fits Inquire. No clear politeness strategies or impoliteness. No meta tags.",69,93187
+Inquire,,,,70,93187
+Claim,,,"Possible acts: Inform vs. Claim. Inform is providing verifiable factual info; Claim is subjective, unverifiable assertions like feelings, preferences. Statement ""Me and my sister are very close."" describes personal relationship, subjective closeness, not objectively verifiable. Therefore Claim fits better. No politeness or meta tags.",71,93187
+Inform,,,,72,93187
+Inform,,,,73,93187
+Inform,,,,74,93187
+Congratulate,+P,,The target utterance “Thats awesome!” follows a statement about someone about to graduate from college. The speaker is expressing positive evaluation and praise for this accomplishment. This fits the “Congratulate” act (praise for achievement). It is also positive politeness (+P) as it builds solidarity through praise. No special meta tags are needed.,75,93187
+Congratulate,+P,,"Two possible acts:
+1. Desire – expresses a hope.
+2. Congratulate – expresses good wishes for success, akin to “Good luck.”
+
+Given taxonomy example “Good luck, gamer.” under Congratulate, the utterance matches that function—offering well-wishing rather than merely stating a personal desire. So select Congratulate.
+
+Politeness: supportive, thus +P. No meta tags needed.",76,93187
+Inquire,,,"The target utterance “Do you regret shooting him?” is clearly seeking information from the original poster about their feelings regarding the shooting. This fits the definition of Inquire (asking for information). It does not express agreement, directives, or other acts. No obvious politeness or impoliteness markers are present; it’s a straightforward question.",77,93187
+Claim,,,,78,93187
+Claim,,,"The utterance “He was abusive and cruel.” is a declarative statement expressing the speaker’s subjective assessment of the boyfriend’s character. While it draws on factual experience, the choice of words (“cruel”) makes it evaluative and not straightforwardly verifiable. Thus it fits best as a Claim (subjective assertion). It does not direct action, ask a question, show gratitude, etc. No politeness or meta cues are evident.",79,93187
+Claim,,,"Possible labels: 
+1. Claim – the speaker states a personal feeling (“I do regret…”), a subjective assertion.
+2. Desire – regret could imply a wish that things were different, fitting the “want/hope/counterfactual” definition.
+3. Elaborate – could be seen as adding detail to prior statement, but content shifts from describing abuser to personal regret, not explaining previous sentence.
+
+Between Claim and Desire: Desire is typically forward-looking (“I want”, “I wish”, “I hope”). Regret is backward-looking expression of feeling; taxonomy lists Desire examples but not regret explicitly. The utterance primarily states an internal emotional fact (“I regret…”), so Claim—an unverifiable subjective assertion—fits best. No politeness or meta markers.",80,93187
+Claim,,,,81,93187
+Claim,,,"The utterance expresses a personal stance: the speaker states they don’t feel bad about killing the abusive boyfriend. This is a subjective assertion about their feelings—unverifiable in principle—fitting the definition of Claim. It is not instructing anyone (Direct), asking (Inquire), providing factual info (Inform), or showing agreement/disagreement with another speaker (Accept/Reject). No clear politeness or impoliteness markers, and no sarcasm or reported speech. Thus: act = Claim; politeness/meta = none.",82,93187
+Accept,+P,,,83,93187
+Congratulate,+P,,"Two plausible acts:
+
+1) React (+P): Simply expressing positive emotion.
+2) Congratulate (+P): Expressing goodwill for a positive outcome/achievement (being released).
+
+Definition of Congratulate: “Express praise or good wishes for achievement.” Saying “I’m glad you are out now” fits as goodwill for the OP’s successful release. It’s more specific than a generic reaction. Hence Congratulate is better.
+
+Politeness: clear positive support (+P). No meta.",84,93187
+Congratulate,+P,,,85,93187
+Congratulate,+P,,"We need to decide which communicative-act label best fits “You're a good person, OP.”
+
+Possible candidates:
+1. React – It is a positive reaction showing engagement and evaluation.
+2. Congratulate – Defined as “Express praise or good wishes for achievement.” Examples include compliments and encouragement like “Good luck, gamer.” The utterance explicitly praises OP’s character, so it falls under expressing praise.
+3. Claim – A subjective assertion, but the social function is clearly praise rather than simply stating an opinion.
+
+Between React and Congratulate, the taxonomy uses Congratulate for praise/compliments, while React is more neutral (e.g., “Cool!!”). Because this utterance is a direct compliment, Congratulate is the more specific and less common act, satisfying the “least frequent act preferred” rule.
+
+Politeness: This is classic positive-politeness (+P) because it supports and compliments the addressee.
+
+Meta: No sarcasm, no reported speech.
+
+Therefore:
+act = Congratulate
+politeness = +P
+meta = """"",86,93187
+Congratulate,+P,,,87,93187
+React,,,,88,93187
+Inquire,,,,89,93187
+Inquire,,,,90,93187
+Inquire,,,"The target utterance “What’s your favourite colour?” is posed as a direct question seeking information from the AMA poster. That clearly aligns with the communicative act “Inquire,” whose definition is to seek information. Alternatives considered: It is not “Manage,” because it doesn’t organize the discussion; it is not “Request,” because it’s not asking for an action beyond providing information. No explicit politeness markers (positive or negative) are included, and there is no sarcasm or reported speech. Thus: act = Inquire, politeness = none, meta = none.",91,93187
+Inform,,,,92,93187
+Claim,,,"Considered Inform vs Claim. The speaker states their belief that “they obviously didn’t care,” which is subjective and not clearly verifiable; thus fits Claim (subjective assertion) better than Inform. No politeness or meta markers present.",93,93187
+Accept,,,,94,93187
+Inform,,,,95,93187
+Inquire,,,"The target utterance is a direct question asking for specific information (“What was the first thing you ate when you got out?”). This fits the definition of the Inquire act, which seeks information. There is no clear politeness marker (neither positive nor negative politeness forms) and no meta aspects such as reported speech or non-bona fide language.",96,93187
+Inform,,,,97,93187
+React,,,,98,93187
+React,,,,99,93187
+Accept,+P,,"The utterance “good choice! 🤤” expresses a positive evaluation and agreement with whatever selection the previous speaker made. Among the act labels: 
+
+– Accept: involves concurrence or agreement. Saying “good choice” signals that the speaker agrees with and endorses the prior choice.  
+– Congratulate: typically praise for an achievement. Selecting a food or option isn’t quite an “achievement,” so this seems less fitting.  
+– React: could fit as a generic positive reaction, but Accept is more specific because it conveys agreement.
+
+Therefore, Accept is the best fit.  
+Politeness: It’s praise/solidarity, so positive politeness (+P) applies.  
+No special meta-tags.",100,93187
+Inquire,,,"The target utterance “what toppings?” is a question seeking information about the toppings on (presumably) a pizza that was called a “good choice.”  
+Possible labels:
+
+1. Inquire – asks for information.  
+2. Request – could be interpreted as implicitly requesting the list, but the taxonomy distinguishes Request (asking for action) from Inquire (asking for info).
+
+Because the user is explicitly asking for information (a factual list), Inquire is the best fit. There is no evident politeness marker or impoliteness; no sarcasm or humor tags.",101,93187
+Inform,,,"The prior message asks “what toppings?”—an information-seeking utterance. The target reply “Bacon, sausage, pepperoni” directly provides the requested factual information. According to the taxonomy, supplying data or facts in response to a query is an Inform act. No agreement/disagreement, no directives, no evaluative stance; just delivering content. There are no politeness cues (compliments, insults, hedges) and no irony or reported speech. Thus: act = Inform, politeness = none, meta = none.",102,93187
+Inquire,,,,103,93187
+React,,,"Possible labels:
+1. React – brief evaluative response showing engagement (“Cool!”, “Eww”), often short remarks reacting to previous post.
+2. Claim – subjective assertion, e.g., “I love pizza.” “You’re missing out” states an opinion that the addressee is deprived.
+
+The utterance is a short, emotional reply triggered by “No pineapple!?”. It doesn’t elaborate facts, request action, or instruct directly; it simply expresses the speaker’s evaluative stance. Such concise evaluations typically fall under React rather than Claim, which is used for fuller propositional assertions.
+
+Therefore React fits best. No clear politeness marking or meta (not sarcastic).",104,93187
+Behave,-P,,"The utterance “I think people who like pineapples on pizza need to be incarcerated.” is:
+• A normative statement about what people (pineapple-pizza lovers) “need” to do/what should happen to them. That fits the Behave category (“call attention to social norms or expectations”).
+• It’s clearly hyperbolic/joking; hence add [non-bona fide].
+• It targets a group with a strong negative judgement (“need to be incarcerated”), so it counts as an insult → –P [Insult].
+
+Other possible acts:
+– Claim: It begins with “I think…”, but the substance is a prescription (“need to”), not just an opinion about taste.
+– Direct: It’s not really instructing the addressee to incarcerate anyone; it’s rhetorical.
+
+Thus, Behave is the best fit, with impoliteness and non-bona fide tags.",105,93187
+Inform,,,,106,93187
+React,,,,107,93187
+Accept,,,"The target utterance “fair enough.” is a brief acknowledgment that signals the speaker concedes or agrees with whatever point was made previously. Among the communicative-act options, the ones to consider are:
+
+1. Accept – shows concurrence or acquiescence.
+2. React – could mark a short emotional response, but “fair enough” is more cognitive than emotional.
+3. Claim – an opinion, but here it is not presenting a new claim; it is responding.
+
+Because “fair enough” directly conveys agreement, “Accept” fits best. There’s no explicit politeness marker (no compliment, hedge, apology), and no sarcasm or reported speech.",108,93187
+Direct,,,"The utterance “Don’t knock it till you try it.” is:
+
+• An imperative addressed to others, instructing them not to criticize something before experiencing it.  
+• This fits the definition of Direct: “Attempt to cause action (require, prohibit, permit, strongly advise).”  
+• It is not merely providing information (Inform), nor is it asking a question (Inquire), nor expressing a desire or opinion (Claim/Desire).  
+• It is stronger than a polite Request; it prohibits (“Don’t”)—so Direct is most accurate.
+
+Politeness: While it is an imperative, it is a common idiom and not overtly rude; no clear politeness or impoliteness marker is needed.
+
+Meta: No reported speech or sarcasm evident.
+
+Therefore: act = Direct; no politeness/meta tags.",109,93187
+Claim,-P,,,110,93187
+Claim,,,,111,93187
+Claim,,,,112,93187
+Manage,,,,113,93187
+Claim,,,,114,93187
+React,,,,115,93187
+Claim,,,"Two plausible labels:  
+1) Claim – It’s a subjective assertion about how people behave (“they will believe anything and everything …”).  
+2) Elaborate – It follows “It sucks…” and could be seen as explaining why it sucks.  
+
+Elaborate is usually used when the speaker explicitly expands on their own immediately prior utterance; here, the connection is uncertain (the prior line could be another user). The central communicative force is the assertion about others’ mindset, regardless of source. This is best captured as a subjective Claim. No politeness or meta markers are evident.",116,93187
+Claim,,,,117,93187
+Claim,+P,,"Possible labels:
+1. Inform: stating factual info ""You murdered him"". But half of utterance is ""you had an excellent reason"" which is subjective evaluation not verifiable.
+2. Claim: subjective assertion about reason; includes factual reference; overall gist is an evaluative claim supporting OP.
+
+We need one act; Claim fits better capturing evaluative nature. Politeness: provides praise/support (""excellent reason"") indicates positive politeness (+P).
+
+Thus output.",118,93187
+Congratulate,+P,,,119,93187
+Congratulate,+P,,"Possible labels:
+1. Congratulate – expressing praise or positive evaluation of addressee’s qualities (“excellent trial judge”).
+2. Claim – a subjective assertion (“I believe…”).
+
+The utterance’s main function is to compliment the OP, indicating esteem and approval. While it is phrased as a belief, the communicative impact is praise rather than merely stating an opinion. Therefore, Congratulate fits better. It also conveys positive politeness (+P).",120,93187
+Inquire,,,"The target utterance “Do you feel any pride for taking him out?” is framed as a direct question asking the OP about their emotional reaction. It is seeking information rather than asserting information (Inform), making a claim (Claim), or giving a directive (Direct). Therefore the most fitting communicative-act label is Inquire.
+
+There are no evident politeness markers (positive or negative), nor impoliteness. No sarcasm or reported speech. Hence “politeness” and “meta” remain empty.",121,93187
+Claim,,,,122,93187
+Claim,,,,123,93187
+Claim,,,"The target sentence “but I do believe that I did the right thing,” expresses the speaker’s personal belief/opinion regarding their past action. It is not requesting information, directing someone, or providing verifiable factual info; instead, it’s a subjective assertion. Therefore, the communicative act best fitting is Claim. There is no apparent politeness strategy or impoliteness, and no meta tags like reported speech or non-bona fide usage.",124,93187
+Claim,,,"The target utterance “and am happy that I got my mom and sister out of the position” primarily conveys the speaker’s personal emotional stance (“am happy”) regarding a situation. While it incidentally references a factual outcome (getting mom and sister out), the thrust is a subjective evaluation/feeling. According to the taxonomy, subjective assertions or expressions of emotion fall under Claim, whereas Inform is reserved for neutral, verifiable facts delivered as such. Therefore, Claim fits best. No overt politeness or meta cues are present.",125,93187
+Inquire,+P,,,126,93187
+Inquire,,,,127,93187
+Claim,,,"The prior utterance is a question: “are close are you to her?” (likely meaning “How close are you to her?”). The target responds “We are very close.” This directly answers the question with an assertion about the relationship. Is it Inform or Claim? Inform is for objectively verifiable facts; Claim is for subjective assertions. Emotional closeness is subjective and not strictly verifiable, so “We are very close” fits Claim better. No politeness markers or meta features.",128,93187
+Inform,,,,129,93187
+Inform,,,,130,93187
+Inquire,,,"The utterance “How are you doing?” clearly seeks information about the interlocutor’s current state/condition. This fits the Inquire act (asking for information). It is not requesting an action (so not Request/Direct), nor providing information (Inform/Claim). Politeness: while friendly, it’s a routine inquiry; no explicit politeness marker. I’ll leave politeness blank. No sarcasm or reported speech.",131,93187
+Claim,,,"The previous utterance asks “How are you doing?”. The target answers: “I’m doing better.” It reports the speaker’s internal state, which is inherently subjective and not directly verifiable. According to the taxonomy, this fits the “Claim” act, since it’s a subjective assertion rather than an objectively verifiable fact. There is no politeness marker beyond neutral, and no meta tags apply.",132,93187
+Inform,,,,133,93187
+Desire,,,"The utterance: “I want to help kids in abusive situations learn to cope and navigate with it all in a healthy manner, unlike my situation.”
+
+Possible acts:
+1. Desire – expresses a personal wish/intention.
+2. Inform – could be seen as conveying information about future plans.
+3. Claim – subjective assertion.
+
+The core force is an expression of what the speaker wants to do (“I want to help…”). This aligns directly with Desire. It is not merely stating a fact that can be verified now (Inform), nor is it simply an opinion claim. Therefore Desire is the best fit.
+
+No clear politeness markers, no sarcasm, no reported speech.",134,93187
+Congratulate,+P,,,135,93187
+Congratulate,+P,,"The utterance “Absolute legend” is an expression of strong admiration/praise toward the previous poster. Possible acts:
+1. React – shows positive engagement (“Cool!!”).
+2. Congratulate – expresses praise for what the other has done.
+
+Because the phrase is explicitly praising the person’s action/character (“legend”), it aligns with the definition of Congratulate (“express praise or good wishes for achievement”). It is also a compliment, so positive politeness (+P) applies. No sarcasm or reported speech.",136,93187
+Congratulate,+P,,"The utterance “Bravo!” is an exclamatory expression of praise and admiration for the OP’s actions, following “Absolute legend” and preceding further praise (“I bet you will make a beautiful difference…”). In Herring’s taxonomy, an expression that praises or offers good wishes for an achievement fits the Congratulate act. Alternatives considered: React (generic positive reaction) and Congratulate. While “Bravo!” is indeed a reaction, it specifically conveys commendation, aligning better with Congratulate. Politeness: this is a complimentary, supportive remark — positive politeness (+P). No sarcasm or reported speech is present.",137,93187
+Congratulate,+P,,,138,93187
+Manage,,,,139,93187
+Desire,+P,,,140,93187
+Inform,,,,141,93187
+Inform,,,,142,93187
+Inform,,,,143,93187
+Inform,,,,144,93187
+Inform,,,,145,93187
+Congratulate,+P,,,146,93187
+React,,,"Possible acts:
+1. Claim – expresses an assertion: abusers so often get away with it. Subjective, not verifiable.
+2. React – expresses emotional evaluation of the situation (“It’s tragic”). Shows engagement with previous content.
+
+The main function seems to be expressing an emotional evaluation in response to the story, rather than primarily advancing new information. It acknowledges the prior message and adds sentiment (“tragic”), which fits React’s definition (showing negative engagement). While it contains an assertion (“so often get away”), the communicative intent is to react with sympathy and condemnation, common for React.
+
+Therefore, choose React. No politeness/impoliteness features. No meta tags.",147,93187
+Congratulate,+P,,,148,93187
+React,+P,,,149,93187
+Congratulate,+P,,"Possible labels: Congratulate, Greet, Thank. ""Best wishes"" expresses well-wishing to addressee, praising or good luck. Fits Congratulate definition. Contains solidarity; include +P politeness. No sarcasm.",150,93187
+Thank,+P,,,151,93187
+Thank,+P,,"The previous user said “Thank you!”; the target responds “I believe we should be thanking you.”  
+This reverses the gratitude toward the previous speaker, which is itself an expression of thanks.  
+Alternative possibilities:
+1. Accept – could be agreeing that thanks are due, but the main function is to express gratitude back.
+2. Thank – direct act of thanking, fits best.
+
+Politeness: thanking is a clear act of positive politeness (compliment/solidarity).  
+No sarcasm or reporting present.",152,93187
+Congratulate,+P,,,153,93187
+Thank,+P,,,154,93187
+React,+P,,,155,93187
+Manage,,,"The target utterance “From what i've read in your OP and comments....” does not itself provide new factual information (Inform) or state a subjective opinion/stance (Claim) yet; instead it functions as a discourse-organizing preface. It signals that the speaker is about to comment based on material they have reviewed, thereby setting the stage and managing the flow of the conversation. This aligns with the “Manage” act, which involves organizing or focusing the discussion. There is no clear politeness marker or meta element present.",156,93187
+Congratulate,+P,,,157,93187
+Claim,+P,,,158,93187
+Inquire,,,"The utterance “Do i condone murder.” syntactically takes the form of a question, so the most obvious communicative-act candidates are Inquire (seeking information) or perhaps Manage (framing the following statement). However, the speaker immediately answers their own question in the next utterance (“No.”). This indicates it is not a genuine request for information from others but a rhetorical question used to set up their self-answer. In the taxonomy, rhetorical questions are still coded for their surface act (Inquire) and tagged with [non-bona fide]. There is no agreement/disagreement or directive here, and no clear politeness move. Therefore the best fit is Inquire with a non-bona fide meta tag.",159,93187
+Claim,,,,160,93187
+Manage,,,,161,93188
+Congratulate,+P,,,162,93187
+Congratulate,+P,,,163,93187
+Inquire,,,,164,93187
+Accept,,,,165,93187
+Inquire,,,,166,93187
+Inquire,,,"The utterance “Idk how his friend didn’t get caught too if it was his.” expresses uncertainty and implicitly seeks an explanation. Although phrased as a declarative, it functions to elicit information (the next reply provides it: “Illegal gun.”). That fits the “Inquire” category (seeking information). No politeness marking or meta tags are obviously needed.",167,93187
+Inform,,,,168,93187
+Inform,,,,169,93187
+Reject,,,"The previous speaker claims that killing the boyfriend “wouldn’t have traced back to him.”  
+The target reply asks, “Who wanted this guy dead?”  Taken literally, it is a question, but in context it is rhetorical: the speaker is implying that the answer (the teenager) is obvious, thereby challenging the claim that the killing couldn’t be traced back. Thus the utterance functions to dispute/contradict the prior statement.  
+Hence primary act = Reject.  
+Since it’s rhetorical, mark meta as [non-bona fide]. No clear politeness or impoliteness.",170,93187
+Claim,,,,171,93187
+Inform,,,,172,93187
+Inform,,,"Possible acts:
+1. Inform – providing factual information about legal standards (a suspicion alone doesn’t result in jail).
+2. Claim – subjective assertion; but here it’s presented as an objective fact about the justice system, potentially verifiable.
+
+Given the context (discussing how a case must be built before arrest), the utterance functions to clarify/provide legal information. Therefore Inform fits best.
+
+No politeness or impoliteness markers, no reported speech, no humor.",173,93187
+Repair,,,"The target utterance responds to the previous comment by restating an important fact from the OP (“there were no witnesses”), apparently to correct or clarify the other commenter’s line of reasoning. This fits “Repair”—clarifying/correcting a possible misunderstanding—better than a simple “Inform,” because it is explicitly framed as referencing and rectifying an earlier point in the discussion (“As he stated first…”). No politeness or meta features stand out.",174,93187
+Claim,,,,175,93187
+Inform,,,"The previous commenter suggested that significant parts were glossed over, presumably including whether there were witnesses. The target reply “There were witnesses.” provides factual clarification, offering new information about the situation. It is not mainly correcting a misunderstanding about wording (so not Repair) but supplying verifiable information. Therefore, the best fit is Inform. No politeness or meta tags are warranted.",176,93187
+Inform,,,,177,93187
+Inquire,,,,178,93187
+Inform,,,,179,93187
+Reject,,,,180,93187
+Claim,,,,181,93187
+Claim,,,,182,93187
+Claim,,,,183,93187
+Inform,,,,184,93187
+Inform,,,"Possible acts:
+1) Inform – providing factual answer about how crime was committed.
+2) Elaborate – expanding on previous statement, but primary function is to convey factual info.
+3) Claim – subjective assertion, but here the speaker treats it as objective fact.
+
+Given the phrase “to answer this,” it directly supplies information in response to a question, making Inform most fitting. No politeness cues, no meta features.",185,93187
+Elaborate,,,"Possible acts: 
+1) Inform – provides factual detail: daylight.
+2) Elaborate – explains/clarifies prior statement “I didn’t do my crime sneakily.”
+
+The utterance directly follows that prior statement and serves to illustrate it by specifying circumstances. That is quintessential elaboration (explanation of own previous utterance). Although it also conveys factual info, the primary discourse function is to flesh out/clarify the preceding claim. Hence label as Elaborate. No politeness or meta tags needed.",186,93187
+Inform,,,,187,93187
+Inform,,,"The utterance is a continuation of the narrator’s recounting of factual circumstances around the crime (“people in his neighborhood knew me… but they didn’t know my friend … and I didn’t give him up”).  
+Possible acts:  
+1. Inform – providing factual information that people were unaware of the friend.  
+2. Claim – but Claim is for subjective/unverifiable assertions, whereas this statement is an objective fact within the story timeline and could in principle be verified.  
+No directive, inquiry, acceptance, etc. present.  
+Therefore “Inform” best fits.  
+No politeness markers or impoliteness.  
+No sarcasm or reported speech.",188,93187
+Inform,,,,189,93187
+Inform,,,,190,93187
+Elaborate,,,"Possible acts: Inform, Elaborate. Inform: provides factual information that the gun was illegal. Elaborate: explains why previous statement is true, expanding on own earlier utterance ""The gun wouldn’t be traced to my friend"". This fits definition: explain or paraphrase a previous utterance. Since primary function is to explain the preceding claim, choose Elaborate. No politeness or meta markers.",191,93187
+Inform,,,,192,93187
+Inform,,,,193,93187
+Desire,,,,194,93187
+React,-P,,,195,93187
+Inquire,,,"The utterance “Are you angry with the justice system for punishing you?” is formulated as a yes/no question that seeks information about the OP’s feelings toward the justice system. Its primary discourse function is to elicit a response; it is not asserting information (Inform/Claim), nor expressing a desire, directive, or evaluation. Therefore, the communicative-act label that fits best is Inquire. There is no clear politeness or impoliteness marker; the question is neutrally phrased. No meta tags apply.",196,93187
+Claim,,,,197,93187
+Elaborate,,,,198,93187
+Accept,,,,199,93187
+Desire,,,,200,93187
+React,+P,,"The utterance “I'm sorry this happened to your family, and his family too.” does not apologize for the speaker’s own wrongdoing; rather, it expresses sympathy/condolence. In the taxonomy there is no dedicated “condole” act, so expressions of empathy fall under “React,” which covers emotional responses that show engagement. Alternative considered: “Apologize,” but that category focuses on self-blame or self-deprecation, which isn’t the case here. Thus “React” is best. The statement is supportive and comforting, so it constitutes positive politeness (+P). No special meta tags apply.",201,93187
+Claim,+P,,,202,93187
+Inquire,,,,203,93187
+Inform,,,,204,93187
+Accept,,,,205,93187
+Accept,,,,206,93187
+Congratulate,+P,,"The utterance “I hope the rest of your life is fantastic!” is directed at the addressee, expressing warm good wishes for their future. Within the taxonomy, “Congratulate” is defined as “express praise or good wishes for achievement” and examples include “Good luck, gamer.” This fits: it’s a goodwill/well-wishing statement rather than an internal desire for oneself.  
+Desire could be considered because it uses “I hope,” but Desire typically involves expressing one’s own wants or hypothetical situations; here the focus is on benevolently wishing the interlocutor well, aligning more with Congratulate.  
+Politeness: it’s clearly supportive and friendly, so positive politeness (+P).  
+No sarcasm or reporting is involved.",207,93187
+Claim,+P,,"Possible acts:
+1. Inform – provides factual info. But “saved your mom and sister’s life” is evaluative; not objectively verifiable, more praise.
+2. Claim – subjective assertion praising OP. Fits better.
+
+Politeness: complimentary/praise = positive politeness (+P).
+No meta.",208,93187
+Congratulate,+P,,,209,93187
+Congratulate,+P,,,210,93187
+Reject,,,"The prior message praises the OP: “Lowkey ur kind of a hero imo.”  
+The target reply “Ehh not really.” expresses disagreement with that praise, downplaying the compliment.  
+Possible acts:  
+1) Reject – disagreeing with the assessment.  
+2) Apologize – it’s not apologetic; no apology.  
+3) React – a simple response, but it specifically negates the prior claim.  
+
+Most fitting: Reject, since it explicitly refutes the evaluation that they are “a hero.”  
+No impoliteness or politeness markers; just a brief disagreement.  
+No meta tags needed.",211,93187
+Reject,,,,212,93187
+Inform,,,"Possible labels:
+
+1. Inform – It provides factual information that services exist to help with abuse, presumably verifiable.
+2. Claim – Could be seen as subjective assertion if unverifiable, but availability of services is generally factual and can be checked.
+3. Direct/Request – Not really; it doesn’t tell OP to do anything directly here (that is in the next line).
+
+Given the sentence states a putatively verifiable fact about services, it best fits Inform. There’s no explicit politeness strategy or impoliteness. No sarcasm.",213,93187
+Direct,,,,214,93187
+Inform,,,,215,93187
+Claim,,,,216,93187
+Reject,,,,217,93187
+Reject,,,,218,93187
+Inform,,,,219,93187
+Elaborate,,,,220,93187
+Behave,,,,221,93187
+Inform,,,"The target utterance states: “All that might do best case scenario is reduce the sentence.”  
+Possible acts:  
+1) Inform – giving (purportedly) factual information about legal consequences.  
+2) Claim – a subjective assertion.  
+
+The speaker presents it as an objective outcome (“best case scenario”), i.e., a legal fact that could be checked, rather than a personal preference or evaluation. In Reddit discourse, such statements about the law are typically treated as facts. Therefore Inform fits better than Claim.
+
+No direct agreement/disagreement, no request or directive.  
+No politeness cues; no insults.
+
+Thus: act = Inform, politeness = none, meta = none.",222,93187
+Reject,-P,,"Possible labels:
+1) Reject – The utterance disagrees with prior commenters who are “advocating for murder.”
+2) Claim – Could be a subjective assertion about having a brain.
+3) React – An emotional reaction (“I can’t believe …”).
+
+Check context: Previous line talks about reducing sentence; OP says nobody else is against murder. They are positioning themselves against others’ stance, implicitly rejecting the pro-murder view. Thus main force = disagreement → Reject. Tone includes “I’m the only one with a brain here,” which insults the others, violating positive politeness → –P [Insult].
+
+So best fit: act = Reject, politeness = –P [Insult]. No meta tags needed.",223,93187
+Inform,,,,224,93187
+Claim,,,,225,93187
+Claim,+P,,,226,93187
+Reject,,,,227,93187
+React,-P,,,228,93187
+Claim,,,,229,93187
+Claim,-P,,,230,93187
+React,,,,231,93187
+Desire,,,"The target utterance states: ""I wish there were laws against assaulting and abusing significant others and children that would prevent the need for a restraining order in the first place."" Literally, that is phrased as a desire/wish. Yet, from context, it’s clearly sarcastic because such laws already exist; the next utterance (“I forgot, there is.”) confirms the irony.  
+Potential acts:  
+1. Desire – fits the surface “I wish” construction, which in the taxonomy covers expressions of wish/hope/counterfactual.  
+2. Claim – could be seen as a sarcastic assertion that there are no such laws, but the primary grammatical form is a wish.  
+Given the taxonomy and examples, “Desire” is the best match. We add meta tag [non-bona fide] for the sarcasm/irony. No impoliteness or politeness markers present.",232,93187
+Repair,,,"The prior utterance expresses a wish for laws against assault and abuse, implying such laws don’t presently exist or aren’t adequate. The target reply “I forgot, there is.” is pointing out that such laws actually do exist, correcting the misconception. Two candidate labels:
+
+1. Repair – correcting a misunderstanding or error in the previous utterance.
+2. Reject – simply disagreeing with the previous content.
+
+While it does reject the prior implication, its primary function is to correct that error (“there is [a law]”), which fits the definition of Repair more precisely. There’s no overt insult or sarcasm strong enough to tag impoliteness; it’s a straightforward correction.",233,93187
+Reject,-P,,,234,93187
+Reject,,,"Possible acts:
+1. Claim – The utterance presents a stance that the crimes do not justify murder; it could be viewed as a subjective assertion.
+2. Reject – The speaker is countering (disagreeing with) the implicit/explicit argument that the boyfriend’s crimes justify killing him.
+
+Context: The preceding comment criticizes someone for assuming the boyfriend would fear trespassing despite committing other crimes; the thread debates the moral/legal justification of the shooting. The target sentence directly challenges any justification for the murder (“still not a justification”). This functions primarily as a disagreement/challenge rather than merely stating a neutral opinion.
+
+Therefore, “Reject” fits best. No insults or imperatives, so no politeness/impoliteness markers. No sarcasm.",235,93187
+Reject,-P,,,236,93187
+Inform,,,,237,93187
+Claim,,non-bona fide,"We need to label “What did he know?” in context. Prior: “OP was a child of 14.” Next: “Should his mother have gotten them out? Yes.” The user is rhetorically questioning—the intended meaning: the 14-year-old couldn’t be expected to know better. It’s not a genuine request for information (Inquire) but an implicit assertion/argument. That aligns with Claim (subjective assertion). Because it’s phrased as a rhetorical question, we add meta tag non-bona fide. No politeness element.",238,93187
+Claim,,,,239,93187
+Behave,,,,240,93187
+Accept,,,,241,93187
+Claim,,,,242,93187
+Reject,,,"The prior comment defends OP’s action as the only way to protect his sister. The target responds: “Still doesn’t excuse murder.” This directly disagrees with the justification offered, challenging the prior statement. Primary options:
+1. Reject – Expresses disagreement/refutation.
+2. Claim – Could be seen as an assertion of opinion.
+
+Because it explicitly counters the previous utterance, the function is rebuttal, fitting Reject. No insults or politeness markers. No sarcasm, so no meta tags.",243,93187
+Reject,,,"The utterance “I can’t believe so many people here are defending murder.” is reacting to previous comments that justify the killing. The speaker is clearly expressing disagreement/challenge to those defenses. Among the act labels, “Reject” fits best, as it functions to dispute or criticize the stance of others. While it includes an evaluation (“I can’t believe…”), its primary communicative force is disagreement. It is not merely providing information (Inform) nor just stating a personal stance without reference to others (Claim); it directly contests the preceding views. No explicit politeness or impoliteness markers beyond mild criticism, so politeness = """" and meta = """".",244,93187
+Claim,-P,,,245,93187
+Claim,,,"Possible acts: Claim (subjective assertion), Reject (disagreeing with previous?), Direct (advice). The utterance states a general aphorism ""Vengeance never wins."" It doesn't directly instruct but expresses a belief. It's not explicitly disagreeing with prior; it's more a moral statement. Thus Claim fits best. No politeness markers or meta.",246,93187
+Accept,+P,,,247,93187
+Claim,,,,248,93187
+Elaborate,,,,249,93187
+Reject,,,,250,93187
+Elaborate,,,,251,93187
+Inform,,,,252,93187
+Claim,,,"Possible labels:
+
+1. Inform: It provides a statement about legal practice and extenuating circumstances. Could be construed as factual.
+2. Claim: Expresses the speaker's opinion/judgment (“He absolutely deserved…”). This is subjective and not clearly verifiable.
+3. Direct: Not instructing anyone.
+
+The utterance is primarily an evaluative stance: “He absolutely deserved…” indicates personal opinion rather than purely conveying facts. Although it references legal practices, the core function is expressing judgment. Thus Claim fits best. No politeness markers, no meta.",253,93187
+Inform,,,,254,93187
+Inform,,,"The target utterance “He was punished.” is a declarative statement providing factual information about what happened to the person in question. It neither requests action nor expresses an evaluation beyond stating a fact. Alternative possibilities considered:
+1) Claim – but it appears verifiable (he actually faced punishment), so fits Inform better.
+2) Elaborate – it continues the prior idea but primarily functions to add a new factual piece rather than rephrase.
+Thus, Inform is the most fitting act. No clear politeness or meta features present.",255,93187
+Inform,,,,256,93187
