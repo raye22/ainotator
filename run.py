@@ -53,6 +53,9 @@ Usage:
 
 Note:
     We only support a family of local model (i.e., Llama-3.1) and OpenAI models.
+    - o3-2025-04-16
+    - gpt-4o-2024-08-06
+    - meta-llama/Llama-3.1-8B-Instruct
 """
 
 __author__ = "The AInotator authors"
