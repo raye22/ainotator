@@ -73,8 +73,8 @@ from typing import Dict, List, Tuple
 import openai
 import pandas as pd
 from tqdm import tqdm
-from transformers import AutoTokenizer
-from vllm import LLM, SamplingParams
+# from transformers import AutoTokenizer
+# from vllm import LLM, SamplingParams
 
 
 FIXED_SEEDS = [93187, 95617, 98473, 101089, 103387]
@@ -227,14 +227,24 @@ def _annotate_row(
         )
 
         # inference
-        if llm is None:  # OpenAI endpoint (gpt-4o / o3)
-            resp = openai.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=0.7,
-                top_p=0.95,
-                seed=seed,
-            )
+        if llm is None:  # OpenAI endpoint
+            # o3 rejects non-default sampling, so fall back to 1.0 / 1.0
+            if model.startswith("o3"):
+                resp = openai.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=1.0,
+                    top_p=1.0,
+                    seed=seed,
+                )
+            else:  # gpt-4o et al. accept custom sampling
+                resp = openai.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=0.7,
+                    top_p=0.95,
+                    seed=seed,
+                )
             content = resp.choices[0].message.content
             ts = resp.created
         else:            # local Llama-3.1 via vLLM
