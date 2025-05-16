@@ -478,7 +478,8 @@ def main() -> None:
     # 5) output directory
     primary_seed = FIXED_SEEDS[0]
     cot_suffix = "_cot" if args.cot else ""
-    out_dir = Path("annotations") / f"{model_tag}_seed_{primary_seed}{cot_suffix}"
+    root = Path("soyeon_annotations") if "Category" in df.columns else Path("yusra_annotations")
+    out_dir = root / f"{model_tag}_seed_{primary_seed}{cot_suffix}"
     out_dir.mkdir(parents=True, exist_ok=True)
     logging.info(f"Output directory: {out_dir}")
 
