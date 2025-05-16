@@ -1,65 +1,78 @@
 """Annotate CMC utterances with AI
 
-This script automates utterance-level annotation for computer-mediated communication
-(CMC) research using OpenAI chat models.
+Automates utterance-level annotation for computer-mediated communication (CMC)
+data using either OpenAI chat models or a local Llama-3.1 model.
 
-It reads an Excel file where each row is one utterance with associated metadata
-(User ID, Gender, Time, Utterance #, Msg#), constructs a rich prompt including:
- 0. Background: a Reddit user (“JuvieThrowaw”) recounts a premeditated...
- 1. Thread starter: all thread-starter posts (Msg# == 1) to anchor the conversation,
- 2. User metadata: speaker identity and timing for each target utterance,
- 3. Local context: the immediate previous, target, and next messages.
 
-Each prompt optionally includes chain-of-thought reasoning inside `[REASON]…[/REASON]`
-when `--cot` is enabled, and finally requests a structured JSON annotation wrapped in
-`[ANNOT]…[/ANNOT]`.
+1. Accepted workbook layouts
 
-What does a prompt look like:
-```SYSTEM:
-<contents of system_prompt.md>
+- Yusra style
+    Msg# | Utterance # | Date | Time | User ID | Gender | Message
+    (no Reply to_ID column)
 
-USER:
-Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they fatally shot
-their mother's abusive boyfriend after he harmed their sister...
+Soyeon style
+    Msg# | Date | Category | User ID | Reply to_ID | Message
+    (may contain several “Original post” rows per thread)
 
-Thread starter: My mom was as in an abusive relationship with her boyfriend...
+The loader `_load_xlsx()` normalises both layouts to a canonical dataframe with
+these columns:
 
-[META] UserID: X, Gender: Y, Time: T, Utterance#: N
-[PREV] …
-[TARGET] …
-[NEXT] …
+    Msg# | Utterance # | Date | Time | User ID | Gender | Message | Reply to_ID
 
-Think step-by-step inside [REASON]…[/REASON] before the answer.   # only if --cot
-Return the annotation as one JSON object wrapped EXACTLY like:
-[ANNOT]{"act":"<ACT>","politeness":"<POL>","meta":"<META>"}[/ANNOT]
-```
+Missing optional fields are filled with empty strings.
 
-Annotations include three fields:
- - `act`: one label from the CMC communicative-act taxonomy,
- - `politeness`: Herring (1994) politeness or Culpeper (2011a) impoliteness codes,
- - `meta`: optional meta-acts (`non-bona fide` or `reported`).
+2. Prompt construction
 
-Key features:
- - **Resumable**: skips rows already annotated (uses `act` column),
- - **Debug mode** (`--debug`): process only the first 10 unannotated rows,
- - **CoT mode** (`--cot`): include model reasoning for transparency,
- - **Seeded reproducibility**: fixed seed plus incremental offsets,
- - **Incremental audit**: writes raw prompts, responses, and cleaned annotations to CSV
-    as it runs.
+- Background
+         - Yusra : the “JuvieThrowaw” juvenile-detention narrative
+         - Soyeon: the r/gaming “progressed farther in Terraria” scenario
 
-Usage:
-    python run.py [--xlsx path/to/file.xlsx] [--model MODEL] [--max_tries N] [--debug]
-    [--cot]
+- Thread starters
+         All rows where Msg# == 1 (Yusra) or Category == "Original post"
+         (Soyeon); included in every prompt to anchor the conversation.
 
-Note:
-    We only support a family of local model (i.e., Llama-3.1) and OpenAI models.
+- Local context
+         Soyeon (reply-aware):
+             PREV = most recent earlier message whose User ID equals Reply to_ID
+         Yusra (fallback):
+             PREV = previous row
+             NEXT = next row
+
+- User metadata line (UserID, Gender, Time, Utterance #)
+
+3. Reasoning
+
+With the --cot flag the prompt adds:
+    Think step-by-step inside [REASON]…[/REASON] before the answer.
+For the o3 model an extra sentence asks it to copy any hidden reasoning into the
+same bracketed block.
+
+4. Expected model output
+Exactly one JSON object wrapped in [ANNOT]…[/ANNOT]:
+
+    [ANNOT]{"act":"<ACT>","politeness":"<POL>","meta":"<META>"}[/ANNOT]
+
+Fields
+    act: one label from the CMC communicative-act taxonomy
+    politeness: Herring (+/-P, +/-N) or Culpeper codes
+    meta: optional meta-acts: non-bona fide, reported
+
+5. Run-time features
+- Resumable: rows with a non-empty act cell are skipped on rerun.
+- Moderation: rows rejected by OpenAI policy are marked __FLAGGED__.
+- Checkpoints: workbook is saved every 20 rows.
+- Audit trail: raw prompts/responses and cleaned annotations are streamed to
+  annotations/<model_tag>_seed_<seed>[_cot]/.
+
+6. Note:
+    We only support Llama-3.1 and OpenAI models.
     - o3-2025-04-16
     - gpt-4o-2024-08-06
     - meta-llama/Llama-3.1-8B-Instruct
 """
 
 __author__ = "The AInotator authors"
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 __license__ = "MIT"
 
 
@@ -93,13 +106,93 @@ REASON_START = "[REASON]"
 REASON_END = "[/REASON]"
 
 
-global_context = (
-    "A Reddit user (JuvieThrowaw) recounts being sentenced to juvenile detention as a "
-    "teenager after killing his mother's abusive boyfriend. The act was premeditated: "
-    "he waited at the boyfriend's house after the boyfriend had harmed his sister. "
-    "Years later, the user is unsure how much of this past to disclose to new close "
-    "friends and partners."
+BACKGROUND_YUSRA = (
+    "Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they "
+    "fatally shot their mother's abusive boyfriend after he harmed their sister, "
+    "served juvenile time, and now struggles with whether to disclose this past "
+    "to new friends and partners."
 )
+
+BACKGROUND_SOYEON = (
+    "Background: A Reddit user (CallSign_Fjor) posts in r/gaming that their "
+    "friends lose interest in finishing Terraria and other games whenever the "
+    "user progresses farther, even though the user avoids using end-game gear "
+    "and shares resources. The post asks why some players feel 'invalidated' "
+    "by someone else’s faster progression."
+)
+
+
+# load either Yusra-style or Soyeon-style workbook and
+# return a DataFrame with canonical column names expected downstream
+def _load_xlsx(path: str) -> pd.DataFrame:
+    """Load either the Yusra sheet or the Soyeon sheet and return a
+    canonical DataFrame with columns
+
+        Msg# | Utterance # | Date | Time | User ID | Gender | Message | Reply to_ID
+
+    - Add missing optional cols (Gender, Time, Reply to_ID) as empty strings.
+    - Create Utterance # when absent (running count inside each Msg# thread).
+    """
+
+    df = pd.read_excel(path, engine="openpyxl")
+
+    # ensure Message col exists
+    if "Message" not in df.columns:
+        raise ValueError("Workbook must contain a 'Message' column")
+
+    # add missing optional columns
+    for col in ("Gender", "Time", "Reply to_ID"):
+        if col not in df.columns:
+            df[col] = ""
+
+    # create Utterance # if absent (Yusra has it; Soyeon doesn't)
+    if "Utterance #" not in df.columns:
+        df["Utterance #"] = (
+            df.groupby("Msg#", sort=False).cumcount() + 1
+            if "Msg#" in df.columns
+            else range(1, len(df) + 1)
+        )
+
+    # sanity-check required cols
+    required = {"Msg#", "User ID", "Message"}
+    missing  = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Workbook missing required column(s): {missing}")
+
+    # tidy order
+    base_cols = ["Msg#", "Utterance #", "Date", "Time",
+                 "User ID", "Gender", "Message", "Reply to_ID"]
+    df = df[[c for c in base_cols if c in df.columns] +
+             [c for c in df.columns if c not in base_cols]]
+
+    return df
+
+
+def _get_local_context(idx: int, df: pd.DataFrame) -> Tuple[str, str]:
+    """
+    Return (prev_msg, next_msg) for row idx.
+
+    - If the sheet has a non-empty 'Reply to_ID' column we fetch only the
+      *parent* message (prev_msg) and leave next_msg blank, because real-world
+      reply trees rarely need a “next child” for local context.
+    - Otherwise fall back to simple previous / next rows (Yusra layout).
+    """
+    row = df.iloc[idx]
+
+    if "Reply to_ID" in df.columns and df["Reply to_ID"].astype(str).str.strip().any():
+        prev_msg = ""
+        reply_to = str(row.get("Reply to_ID", "")).strip()
+        if reply_to:
+            earlier = df.iloc[:idx]
+            mask = earlier["User ID"].astype(str) == reply_to
+            if mask.any():
+                prev_msg = earlier.loc[mask, "Message"].iloc[-1]
+        return prev_msg, ""          # <-- next_msg intentionally blank
+
+    # sequential fallback (Yusra)
+    prev_msg = df.at[idx - 1, "Message"] if idx > 0 else ""
+    next_msg = df.at[idx + 1, "Message"] if idx < len(df) - 1 else ""
+    return prev_msg, next_msg
 
 
 def _build_messages(
@@ -108,7 +201,7 @@ def _build_messages(
     include_cot: bool,
     global_context: str,
     user_meta: str,
-    model_tag: str,                     # "gpt-4o", "o3", or "llama"
+    model_tag: str,  # "gpt-4o", "o3", or "llama"
 ) -> List[Dict]:
     """Compose the list of chat messages for OpenAI / vLLM, including
     global context and user metadata."""
@@ -144,7 +237,6 @@ def _build_messages(
         {"role": "system", "content": system_block},
         {"role": "user",   "content": user_block + reasoning_block + format_block},
     ]
-
 
 
 def _parse_annotation(text: str) -> Dict:
@@ -218,9 +310,8 @@ def _annotate_row(
     """
     raw_records: List[Dict] = []
 
-    prev_msg = df.at[row_idx - 1, "Message"] if row_idx > 0 else ""
-    targ_msg = df.at[row_idx,     "Message"]
-    next_msg = df.at[row_idx + 1, "Message"] if row_idx < len(df) - 1 else ""
+    prev_msg, next_msg = _get_local_context(row_idx, df)
+    targ_msg = df.at[row_idx, "Message"]
 
     base_seed = FIXED_SEEDS[0]
 
@@ -317,17 +408,14 @@ def main() -> None:
                         level=logging.INFO)
     logging.info("Starting annotation run")
 
-    # 2) load workbook
-    df = pd.read_excel(args.xlsx, engine="openpyxl")
+    # 2) load & normalise workbook (handles either layout)
+    df = _load_xlsx(args.xlsx)
 
     # 3) build dynamic global context
     first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
-    thread_summary = (
-        "Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they "
-        "fatally shot their mother's abusive boyfriend after he harmed their sister, "
-        "served juvenile time, and now struggles with whether to disclose this past "
-        "to new friends and partners."
-    )
+    thread_summary = BACKGROUND_YUSRA
+    if "Category" in df.columns:      # Soyeon layout
+        thread_summary = BACKGROUND_SOYEON
     dynamic_global_context = "\n\n".join([
         thread_summary,
         "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts)
@@ -439,7 +527,6 @@ def main() -> None:
     # 9) final save
     df.to_excel(args.xlsx, index=False)
     logging.info("Annotation run complete – final workbook saved")
-
 
 
 if __name__ == '__main__':
