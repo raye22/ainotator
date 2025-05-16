@@ -272,8 +272,13 @@ def _annotate_row(
 
         try:
             anno = _parse_annotation(content)
+            # make sure reasoning was really captured
+            if include_cot and len(anno.get("reason", "")) < 5:
+                raise ValueError("reasoning too short – likely not captured")
+
             anno.update({"row_idx": row_idx, "seed": seed})
             return anno, raw_records
+
         except (json.JSONDecodeError, ValueError) as e:
             logging.warning(f"Row {row_idx} seed {seed} parse error: {e}")
             time.sleep(2 ** attempt)
