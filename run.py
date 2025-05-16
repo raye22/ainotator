@@ -304,7 +304,7 @@ def main() -> None:
 
     CHECKPOINT_EVERY = 20  # rows after which we write df back to Excel
 
-    # 1) cLI
+    # 1) cli
     parser = argparse.ArgumentParser()
     parser.add_argument("--xlsx",  default="data/Yusra_politeness.sch.copy.xlsx")
     parser.add_argument("--model", default="gpt-4o-2024-08-06")
