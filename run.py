@@ -108,12 +108,14 @@ def _build_messages(
     include_cot: bool,
     global_context: str,
     user_meta: str,
+    model_tag: str,                     # "gpt-4o", "o3", or "llama"
 ) -> List[Dict]:
-    """Compose the list of chat messages for OpenAI, including global context and user
-    metadata."""
+    """Compose the list of chat messages for OpenAI / vLLM, including
+    global context and user metadata."""
+
     prev_msg, target_msg, next_msg = context
 
-    # prepend user metadata (plain text lines)
+    # user-side blocks
     user_block = (
         f"{user_meta}"
         f"[PREV] {prev_msg or '<NONE>'}\n"
@@ -121,22 +123,28 @@ def _build_messages(
         f"[NEXT] {next_msg or '<NONE>'}\n"
     )
 
-    reasoning_block = (
-        "\nThink step-by-step inside [REASON]…[/REASON] before the answer."
-        if include_cot else ""
-    )
+    reasoning_block = ""
+    if include_cot:
+        reasoning_block = "\nThink step-by-step inside [REASON]…[/REASON] before the answer."
+        if model_tag == "o3":
+            reasoning_block += (
+                "\nIf you used hidden or internal reasoning anywhere, copy **all** of that "
+                "reasoning verbatim inside the same [REASON]…[/REASON] block."
+            )
 
     format_block = (
         "\nReturn the annotation as one JSON object wrapped EXACTLY like:\n"
         f"{START_TAG}{{\"act\":\"<ACT>\",\"politeness\":\"<POL>\",\"meta\":\"<META>\"}}{END_TAG}"
     )
 
+    # system block
     system_block = f"{global_context.strip()}\n\n{system_prompt}"
 
     return [
         {"role": "system", "content": system_block},
         {"role": "user",   "content": user_block + reasoning_block + format_block},
     ]
+
 
 
 def _parse_annotation(text: str) -> Dict:
@@ -224,6 +232,7 @@ def _annotate_row(
             include_cot,
             global_context,
             user_meta,
+            "o3" if model.startswith("o3") else "gpt-4o" if model.startswith("gpt-4o") else "llama",
         )
 
         # inference
