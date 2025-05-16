@@ -423,40 +423,26 @@ def _annotate_row(
 
 
 def main() -> None:
-    """Entry point: load data, annotate rows, checkpoint, and save final XLSX."""
-
+    """Entry point: load data, replay prior annotations, annotate rows, checkpoint, and save final XLSX."""
     CHECKPOINT_EVERY = 20  # rows after which we write df back to Excel
 
-    # 1) cli
+    # 1) CLI
     parser = argparse.ArgumentParser()
-    parser.add_argument("--xlsx", default="data/Yusra.xlsx")
+    parser.add_argument("--xlsx",  default="data/Yusra.xlsx")
     parser.add_argument("--model", default="gpt-4o-2024-08-06")
     parser.add_argument("--max_tries", type=int, default=20)
     parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--cot", action="store_true")
+    parser.add_argument("--cot",   action="store_true")
     args = parser.parse_args()
 
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO
-    )
+    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
     logging.info("Starting annotation run")
 
-    # 2) load & normalise workbook (handles either layout)
+    # 2) Load & normalise workbook (handles either layout)
     df = _load_xlsx(args.xlsx)
 
-    # 3) build dynamic global context
-    first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
-    thread_summary = BACKGROUND_YUSRA
-    if "Category" in df.columns:  # Soyeon layout
-        thread_summary = BACKGROUND_SOYEON
-    dynamic_global_context = "\n\n".join(
-        [
-            thread_summary,
-            "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts),
-        ]
-    )
-
-    # 4) model tag & local / remote setup
+    # replay any previously‐logged annotations so we skip them on resume
+    # determine model_tag exactly as below later in the script:
     if args.model.startswith("gpt-4o"):
         model_tag = "gpt-4o"
     elif args.model.startswith("o3"):
@@ -465,30 +451,44 @@ def main() -> None:
         model_tag = "llama"
     else:
         raise ValueError("Unknown model. Only support Llama-3.1 and OpenAI API.")
-
-    is_llama = model_tag == "llama"
-    tokenizer = llm = None
-    if is_llama:
-        from transformers import AutoTokenizer
-        from vllm import LLM, SamplingParams
-
-        tokenizer = AutoTokenizer.from_pretrained(args.model)
-        llm = LLM(model=args.model, dtype="bfloat16")
-
-    # 5) output directory
     primary_seed = FIXED_SEEDS[0]
     cot_suffix = "_cot" if args.cot else ""
     root = Path("soyeon_annotations") if "Category" in df.columns else Path("yusra_annotations")
     out_dir = root / f"{model_tag}_seed_{primary_seed}{cot_suffix}"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    logging.info(f"Output directory: {out_dir}")
+    seq_path = out_dir / "annot_seq.csv"
+    if seq_path.exists():
+        prev = pd.read_csv(seq_path)
+        for _, r in prev.iterrows():
+            ridx = int(r["row_idx"])
+            act  = r["act"]
+            if act and act not in ("__FAILED__", "__FLAGGED__"):
+                df.at[ridx, "act"] = act
 
-    # 6) ensure annotation columns exist
+    # 3) build dynamic global context
+    first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
+    thread_summary = BACKGROUND_YUSRA
+    if "Category" in df.columns:  # Soyeon layout
+        thread_summary = BACKGROUND_SOYEON
+    dynamic_global_context = "\n\n".join([
+        thread_summary,
+        "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts)
+    ])
+
+    # 4) model tag & local / remote setup
+    is_llama = (model_tag == "llama")
+    tokenizer = llm = None
+    if is_llama:
+        from transformers import AutoTokenizer
+        from vllm import LLM, SamplingParams
+        tokenizer = AutoTokenizer.from_pretrained(args.model)
+        llm = LLM(model=args.model, dtype="bfloat16")
+
+    # 5) ensure annotation columns exist
     for col in ("act", "politeness", "meta"):
         if col not in df.columns:
             df[col] = ""
 
-    # 7) determine rows to annotate (resumable!)
+    # 6) determine rows to annotate (resumable!)
     todo_idx = df.index[~df["act"].astype(bool)]
     if args.debug:
         todo_idx = todo_idx[:10]
@@ -497,7 +497,7 @@ def main() -> None:
     system_prompt = Path("system_prompt.md").read_text(encoding="utf-8")
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
 
-    # 8) main loop
+    # 7) main loop
     for count, idx in enumerate(pbar, start=1):
         row = df.iloc[idx]
         user_meta = (
@@ -509,11 +509,7 @@ def main() -> None:
 
         try:
             anno, raws = _annotate_row(
-                idx,
-                df,
-                system_prompt,
-                args.model,
-                args.max_tries,
+                idx, df, system_prompt, args.model, args.max_tries,
                 include_cot=args.cot,
                 global_context=dynamic_global_context,
                 user_meta=user_meta,
@@ -521,45 +517,34 @@ def main() -> None:
                 tokenizer=tokenizer,
             )
 
-            # write back to dataframe
+            # write back to DataFrame
             df.loc[idx, ["act", "politeness", "meta"]] = [
-                anno["act"],
-                anno["politeness"],
-                anno["meta"],
+                anno["act"], anno["politeness"], anno["meta"]
             ]
 
             # append logs
             pd.DataFrame([anno]).to_csv(
                 out_dir / "annot_clean.csv",
-                mode="a",
-                header=not (out_dir / "annot_clean.csv").exists(),
-                index=False,
+                mode="a", header=not (out_dir / "annot_clean.csv").exists(), index=False
             )
             pd.DataFrame(raws).to_csv(
                 out_dir / "annot_raw.csv",
-                mode="a",
-                header=not (out_dir / "annot_raw.csv").exists(),
-                index=False,
+                mode="a", header=not (out_dir / "annot_raw.csv").exists(), index=False
             )
             df.iloc[[idx]].to_csv(
                 out_dir / "annot_seq.csv",
-                mode="a",
-                header=not (out_dir / "annot_seq.csv").exists(),
-                index=False,
+                mode="a", header=not (out_dir / "annot_seq.csv").exists(), index=False
             )
 
             logging.info(f"Annotated row {idx}")
 
         except RuntimeError as exc:
-            # distinguish policy-flagged rows from other failures
             flag = "__FLAGGED__" if str(exc) == "policy_flagged" else "__FAILED__"
             logging.error(exc)
             df.loc[idx, ["act", "politeness", "meta"]] = [flag, "", ""]
             df.iloc[[idx]].to_csv(
                 out_dir / "annot_seq.csv",
-                mode="a",
-                header=not (out_dir / "annot_seq.csv").exists(),
-                index=False,
+                mode="a", header=not (out_dir / "annot_seq.csv").exists(), index=False
             )
 
         # periodic checkpoint to XLSX
@@ -567,12 +552,13 @@ def main() -> None:
             df.to_excel(args.xlsx, index=False)
             logging.info("Checkpoint saved to Excel")
 
-    # 9) final save
+    # 8) final save
     if not args.debug:
         df.to_excel(args.xlsx, index=False)
         logging.info("Annotation run complete – final workbook saved")
     else:
         logging.info("Debug run complete — no changes written to workbook")
+
 
 
 if __name__ == "__main__":
