@@ -237,23 +237,27 @@ def _annotate_row(
 
         # inference
         if llm is None:  # OpenAI endpoint
-            # o3 rejects non-default sampling, so fall back to 1.0 / 1.0
-            if model.startswith("o3"):
-                resp = openai.chat.completions.create(
-                    model=model,
-                    messages=messages,
-                    temperature=1.0,
-                    top_p=1.0,
-                    seed=seed,
-                )
-            else:  # gpt-4o et al. accept custom sampling
-                resp = openai.chat.completions.create(
-                    model=model,
-                    messages=messages,
-                    temperature=0.7,
-                    top_p=0.95,
-                    seed=seed,
-                )
+            try:
+                if model.startswith("o3"):
+                    resp = openai.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=1.0,
+                        top_p=1.0,
+                        seed=seed,
+                    )
+                else:
+                    resp = openai.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=0.7,
+                        top_p=0.95,
+                        seed=seed,
+                    )
+            except openai.BadRequestError as e:
+                # flagged by moderation — mark and bail out
+                logging.warning(f"Row {row_idx} seed {seed} flagged by policy; skipping.")
+                raise RuntimeError("policy_flagged")
             content = resp.choices[0].message.content
             ts = resp.created
         else:            # local Llama-3.1 via vLLM
@@ -300,21 +304,23 @@ def main() -> None:
 
     CHECKPOINT_EVERY = 20  # rows after which we write df back to Excel
 
+    # 1) cLI
     parser = argparse.ArgumentParser()
-    parser.add_argument("--xlsx", default="data/Yusra_politeness.sch.copy.xlsx")
+    parser.add_argument("--xlsx",  default="data/Yusra_politeness.sch.copy.xlsx")
     parser.add_argument("--model", default="gpt-4o-2024-08-06")
     parser.add_argument("--max_tries", type=int, default=20)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--cot", action="store_true")
+    parser.add_argument("--debug",  action="store_true")
+    parser.add_argument("--cot",    action="store_true")
     args = parser.parse_args()
 
     logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s",
                         level=logging.INFO)
     logging.info("Starting annotation run")
 
+    # 2) load workbook
     df = pd.read_excel(args.xlsx, engine="openpyxl")
 
-    # build dynamic global context
+    # 3) build dynamic global context
     first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
     thread_summary = (
         "Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they "
@@ -327,7 +333,7 @@ def main() -> None:
         "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts)
     ])
 
-    # model tag & local / remote setup
+    # 4) model tag & local / remote setup
     if args.model.startswith("gpt-4o"):
         model_tag = "gpt-4o"
     elif args.model.startswith("o3"):
@@ -340,23 +346,24 @@ def main() -> None:
     is_llama = model_tag == "llama"
     tokenizer = llm = None
     if is_llama:
-        from transformers import AutoTokenizer      # local import to avoid overhead
+        from transformers import AutoTokenizer            # defer import
         from vllm import LLM, SamplingParams
         tokenizer = AutoTokenizer.from_pretrained(args.model)
-        llm = LLM(model=args.model, dtype="auto")  # single H100 assumed
+        llm = LLM(model=args.model, dtype="auto")          # single H100 assumed
 
+    # 5) output directory
     primary_seed = FIXED_SEEDS[0]
     cot_suffix = "_cot" if args.cot else ""
     out_dir = Path("annotations") / f"{model_tag}_seed_{primary_seed}{cot_suffix}"
     out_dir.mkdir(parents=True, exist_ok=True)
     logging.info(f"Output directory: {out_dir}")
 
-    # ensure annotation columns exist
+    # 6) ensure annotation columns exist
     for col in ("act", "politeness", "meta"):
         if col not in df.columns:
             df[col] = ""
 
-    # figure out work to do
+    # 7) determine rows to annotate (resumable!)
     todo_idx = df.index[~df["act"].astype(bool)]
     if args.debug:
         todo_idx = todo_idx[:10]
@@ -365,6 +372,7 @@ def main() -> None:
     system_prompt = Path("system_prompt.md").read_text(encoding="utf-8")
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
 
+    # 8) main loop
     for count, idx in enumerate(pbar, start=1):
         row = df.iloc[idx]
         user_meta = (
@@ -373,6 +381,7 @@ def main() -> None:
             f"Time: {row['Time']}, "
             f"Utterance#: {row['Utterance #']}\n"
         )
+
         try:
             anno, raws = _annotate_row(
                 idx, df, system_prompt, args.model, args.max_tries,
@@ -382,10 +391,13 @@ def main() -> None:
                 llm=llm,
                 tokenizer=tokenizer,
             )
+
+            # write back to dataframe
             df.loc[idx, ["act", "politeness", "meta"]] = [
                 anno["act"], anno["politeness"], anno["meta"]
             ]
 
+            # append logs
             pd.DataFrame([anno]).to_csv(
                 out_dir / "annot_clean.csv",
                 mode="a",
@@ -408,8 +420,10 @@ def main() -> None:
             logging.info(f"Annotated row {idx}")
 
         except RuntimeError as exc:
+            # distinguish policy-flagged rows from other failures
+            flag = "__FLAGGED__" if str(exc) == "policy_flagged" else "__FAILED__"
             logging.error(exc)
-            df.loc[idx, ["act", "politeness", "meta"]] = ["__FAILED__", "", ""]
+            df.loc[idx, ["act", "politeness", "meta"]] = [flag, "", ""]
             df.iloc[[idx]].to_csv(
                 out_dir / "annot_seq.csv",
                 mode="a",
@@ -417,12 +431,12 @@ def main() -> None:
                 index=False,
             )
 
-        # periodic checkpoint
+        # periodic checkpoint to XLSX
         if count % CHECKPOINT_EVERY == 0:
             df.to_excel(args.xlsx, index=False)
             logging.info("Checkpoint saved to Excel")
 
-    # final save
+    # 9) final save
     df.to_excel(args.xlsx, index=False)
     logging.info("Annotation run complete – final workbook saved")
 
