@@ -563,13 +563,16 @@ def main() -> None:
             )
 
         # periodic checkpoint to XLSX
-        if count % CHECKPOINT_EVERY == 0:
+        if not args.debug and count % CHECKPOINT_EVERY == 0:
             df.to_excel(args.xlsx, index=False)
             logging.info("Checkpoint saved to Excel")
 
     # 9) final save
-    df.to_excel(args.xlsx, index=False)
-    logging.info("Annotation run complete – final workbook saved")
+    if not args.debug:
+        df.to_excel(args.xlsx, index=False)
+        logging.info("Annotation run complete – final workbook saved")
+    else:
+        logging.info("Debug run complete — no changes written to workbook")
 
 
 if __name__ == "__main__":
