@@ -78,24 +78,36 @@ __license__ = "MIT"
 
 import argparse
 import json
+import logging
 import time
 from pathlib import Path
-import logging
 from typing import Dict, List, Tuple
 
 import openai
 import pandas as pd
 from tqdm import tqdm
-# from transformers import AutoTokenizer
-# from vllm import LLM, SamplingParams
-
 
 FIXED_SEEDS = [93187, 95617, 98473, 101089, 103387]
 
 ALLOWED_ACTS: List[str] = [
-    "Accept", "Apologize", "Behave", "Claim", "Congratulate", "Desire",
-    "Direct", "Elaborate", "Greet", "Inform", "Inquire", "Invite", "Manage",
-    "React", "Reject", "Repair", "Request", "Thank",
+    "Accept",
+    "Apologize",
+    "Behave",
+    "Claim",
+    "Congratulate",
+    "Desire",
+    "Direct",
+    "Elaborate",
+    "Greet",
+    "Inform",
+    "Inquire",
+    "Invite",
+    "Manage",
+    "React",
+    "Reject",
+    "Repair",
+    "Request",
+    "Thank",
 ]
 ALLOWED_POLITENESS: List[str] = ["+P", "+N", "-P", "-N"]
 ALLOWED_META: List[str] = ["non-bona fide", "reported"]
@@ -155,15 +167,25 @@ def _load_xlsx(path: str) -> pd.DataFrame:
 
     # sanity-check required cols
     required = {"Msg#", "User ID", "Message"}
-    missing  = required - set(df.columns)
+    missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Workbook missing required column(s): {missing}")
 
     # tidy order
-    base_cols = ["Msg#", "Utterance #", "Date", "Time",
-                 "User ID", "Gender", "Message", "Reply to_ID"]
-    df = df[[c for c in base_cols if c in df.columns] +
-             [c for c in df.columns if c not in base_cols]]
+    base_cols = [
+        "Msg#",
+        "Utterance #",
+        "Date",
+        "Time",
+        "User ID",
+        "Gender",
+        "Message",
+        "Reply to_ID",
+    ]
+    df = df[
+        [c for c in base_cols if c in df.columns]
+        + [c for c in df.columns if c not in base_cols]
+    ]
 
     return df
 
@@ -187,7 +209,7 @@ def _get_local_context(idx: int, df: pd.DataFrame) -> Tuple[str, str]:
             mask = earlier["User ID"].astype(str) == reply_to
             if mask.any():
                 prev_msg = earlier.loc[mask, "Message"].iloc[-1]
-        return prev_msg, ""          # <-- next_msg intentionally blank
+        return prev_msg, ""  # <-- next_msg intentionally blank
 
     # sequential fallback (Yusra)
     prev_msg = df.at[idx - 1, "Message"] if idx > 0 else ""
@@ -218,7 +240,9 @@ def _build_messages(
 
     reasoning_block = ""
     if include_cot:
-        reasoning_block = "\nThink step-by-step inside [REASON]…[/REASON] before the answer."
+        reasoning_block = (
+            "\nThink step-by-step inside [REASON]…[/REASON] before the answer."
+        )
         if model_tag == "o3":
             reasoning_block += (
                 "\nIf you used hidden or internal reasoning anywhere, copy **all** of that "
@@ -227,7 +251,7 @@ def _build_messages(
 
     format_block = (
         "\nReturn the annotation as one JSON object wrapped EXACTLY like:\n"
-        f"{START_TAG}{{\"act\":\"<ACT>\",\"politeness\":\"<POL>\",\"meta\":\"<META>\"}}{END_TAG}"
+        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","meta":"<META>"}}{END_TAG}'
     )
 
     # system block
@@ -235,7 +259,7 @@ def _build_messages(
 
     return [
         {"role": "system", "content": system_block},
-        {"role": "user",   "content": user_block + reasoning_block + format_block},
+        {"role": "user", "content": user_block + reasoning_block + format_block},
     ]
 
 
@@ -323,7 +347,11 @@ def _annotate_row(
             include_cot,
             global_context,
             user_meta,
-            "o3" if model.startswith("o3") else "gpt-4o" if model.startswith("gpt-4o") else "llama",
+            (
+                "o3"
+                if model.startswith("o3")
+                else "gpt-4o" if model.startswith("gpt-4o") else "llama"
+            ),
         )
 
         # inference
@@ -347,11 +375,13 @@ def _annotate_row(
                     )
             except openai.BadRequestError as e:
                 # flagged by moderation — mark and bail out
-                logging.warning(f"Row {row_idx} seed {seed} flagged by policy; skipping.")
+                logging.warning(
+                    f"Row {row_idx} seed {seed} flagged by policy; skipping."
+                )
                 raise RuntimeError("policy_flagged")
             content = resp.choices[0].message.content
             ts = resp.created
-        else:            # local Llama-3.1 via vLLM
+        else:  # local Llama-3.1 via vLLM
             prompt = tokenizer.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
@@ -366,13 +396,15 @@ def _annotate_row(
             content = out.text
             ts = time.time()
 
-        raw_records.append({
-            "row_idx":   row_idx,
-            "seed":      seed,
-            "prompt":    json.dumps(messages, ensure_ascii=False),
-            "response":  content,
-            "timestamp": ts,
-        })
+        raw_records.append(
+            {
+                "row_idx": row_idx,
+                "seed": seed,
+                "prompt": json.dumps(messages, ensure_ascii=False),
+                "response": content,
+                "timestamp": ts,
+            }
+        )
 
         try:
             anno = _parse_annotation(content)
@@ -385,7 +417,7 @@ def _annotate_row(
 
         except (json.JSONDecodeError, ValueError) as e:
             logging.warning(f"Row {row_idx} seed {seed} parse error: {e}")
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
 
     raise RuntimeError(f"row {row_idx}: parse failed after {max_tries} tries")
 
@@ -397,15 +429,16 @@ def main() -> None:
 
     # 1) cli
     parser = argparse.ArgumentParser()
-    parser.add_argument("--xlsx",  default="data/Yusra_politeness.sch.copy.xlsx")
+    parser.add_argument("--xlsx", default="data/Yusra.xlsx")
     parser.add_argument("--model", default="gpt-4o-2024-08-06")
     parser.add_argument("--max_tries", type=int, default=20)
-    parser.add_argument("--debug",  action="store_true")
-    parser.add_argument("--cot",    action="store_true")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--cot", action="store_true")
     args = parser.parse_args()
 
-    logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s",
-                        level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO
+    )
     logging.info("Starting annotation run")
 
     # 2) load & normalise workbook (handles either layout)
@@ -414,12 +447,14 @@ def main() -> None:
     # 3) build dynamic global context
     first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
     thread_summary = BACKGROUND_YUSRA
-    if "Category" in df.columns:      # Soyeon layout
+    if "Category" in df.columns:  # Soyeon layout
         thread_summary = BACKGROUND_SOYEON
-    dynamic_global_context = "\n\n".join([
-        thread_summary,
-        "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts)
-    ])
+    dynamic_global_context = "\n\n".join(
+        [
+            thread_summary,
+            "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts),
+        ]
+    )
 
     # 4) model tag & local / remote setup
     if args.model.startswith("gpt-4o"):
@@ -434,10 +469,11 @@ def main() -> None:
     is_llama = model_tag == "llama"
     tokenizer = llm = None
     if is_llama:
-        from transformers import AutoTokenizer            # defer import
+        from transformers import AutoTokenizer
         from vllm import LLM, SamplingParams
+
         tokenizer = AutoTokenizer.from_pretrained(args.model)
-        llm = LLM(model=args.model, dtype="auto")          # single H100 assumed
+        llm = LLM(model=args.model, dtype="bfloat16")
 
     # 5) output directory
     primary_seed = FIXED_SEEDS[0]
@@ -472,7 +508,11 @@ def main() -> None:
 
         try:
             anno, raws = _annotate_row(
-                idx, df, system_prompt, args.model, args.max_tries,
+                idx,
+                df,
+                system_prompt,
+                args.model,
+                args.max_tries,
                 include_cot=args.cot,
                 global_context=dynamic_global_context,
                 user_meta=user_meta,
@@ -482,7 +522,9 @@ def main() -> None:
 
             # write back to dataframe
             df.loc[idx, ["act", "politeness", "meta"]] = [
-                anno["act"], anno["politeness"], anno["meta"]
+                anno["act"],
+                anno["politeness"],
+                anno["meta"],
             ]
 
             # append logs
@@ -529,5 +571,5 @@ def main() -> None:
     logging.info("Annotation run complete – final workbook saved")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
