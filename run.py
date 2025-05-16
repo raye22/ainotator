@@ -296,6 +296,9 @@ def _annotate_row(
 
 
 def main() -> None:
+    """Entry point: load data, annotate rows, checkpoint, and save final XLSX."""
+
+    CHECKPOINT_EVERY = 20  # rows after which we write df back to Excel
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--xlsx", default="data/Yusra_politeness.sch.copy.xlsx")
@@ -311,7 +314,7 @@ def main() -> None:
 
     df = pd.read_excel(args.xlsx, engine="openpyxl")
 
-    # dynamic global context
+    # build dynamic global context
     first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
     thread_summary = (
         "Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they "
@@ -332,12 +335,13 @@ def main() -> None:
     elif "llama" in args.model.lower():
         model_tag = "llama"
     else:
-        raise ValueError('Unknown model. Only support Llama-3.1 and OpenAI API.')
+        raise ValueError("Unknown model. Only support Llama-3.1 and OpenAI API.")
 
     is_llama = model_tag == "llama"
     tokenizer = llm = None
     if is_llama:
-
+        from transformers import AutoTokenizer      # local import to avoid overhead
+        from vllm import LLM, SamplingParams
         tokenizer = AutoTokenizer.from_pretrained(args.model)
         llm = LLM(model=args.model, dtype="auto")  # single H100 assumed
 
@@ -347,12 +351,12 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     logging.info(f"Output directory: {out_dir}")
 
-    # init annotation columns
+    # ensure annotation columns exist
     for col in ("act", "politeness", "meta"):
         if col not in df.columns:
             df[col] = ""
 
-    # rows to process
+    # figure out work to do
     todo_idx = df.index[~df["act"].astype(bool)]
     if args.debug:
         todo_idx = todo_idx[:10]
@@ -361,7 +365,7 @@ def main() -> None:
     system_prompt = Path("system_prompt.md").read_text(encoding="utf-8")
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
 
-    for idx in pbar:
+    for count, idx in enumerate(pbar, start=1):
         row = df.iloc[idx]
         user_meta = (
             f"UserID: {row['User ID']}, "
@@ -402,6 +406,7 @@ def main() -> None:
             )
 
             logging.info(f"Annotated row {idx}")
+
         except RuntimeError as exc:
             logging.error(exc)
             df.loc[idx, ["act", "politeness", "meta"]] = ["__FAILED__", "", ""]
@@ -412,7 +417,15 @@ def main() -> None:
                 index=False,
             )
 
-    logging.info("Annotation run complete")
+        # periodic checkpoint
+        if count % CHECKPOINT_EVERY == 0:
+            df.to_excel(args.xlsx, index=False)
+            logging.info("Checkpoint saved to Excel")
+
+    # final save
+    df.to_excel(args.xlsx, index=False)
+    logging.info("Annotation run complete – final workbook saved")
+
 
 
 if __name__ == '__main__':
