@@ -42,12 +42,14 @@ Only annotate when a (non-)politeness act is clearly expressed.
 
 ### I. Herring (1994)
 
+Based on Brown and Levinson's (1987) Politeness Theory: Positive politeness aims to enhance the addressee's self-esteem and build a positive relationship, while negative politeness focuses on minimizing the imposition on the addressee and respecting their autonomy.
+
 | Code | Meaning | Example(s) |
 |------|---------|------------|
-| **+P** | Positive politeness (support, compliments, humor, solidarity) | "Best wishes for a smooth re-entry."; "I really respect that you pursued learning."; "Thank you for the wishes." |
-| **+N** | Negative politeness (hedging, apologies, giving options) | "I don't mean to sound cold, but…"; "You're correct, and so are the people here who say some things are mistakes"; "I understand what you were saying."; "I hope I have answered some of the questions you are asking in the post." |
-| **-P** | Violation of positive politeness (mocking, flaming, etc.) | "It's not rocket science, and it's pathetic if you genuinely can't see the difference."; "You are just an angry little person"; "People like you are the real danger because you always want to idolize the 'reformed thug or murderer' but never the people who don't murder at all." |
-| **-N** | Violation of negative politeness (commands, imperatives, intrusive) | "So how's school, love, family life?"; "You don't get to dictate morality"; "Remorse is the one thing that anyone with a conscience should have."; "Did you do it? If so why?" |
+| **+P** | Positive politeness: Affirm the addressee's positive face (desire to be liked, appreciated, accepted) through support, compliments, humor, solidarity | "Best wishes for a smooth re-entry."; "I really respect that you pursued learning."; "Thank you for the wishes." |
+| **+N** | Negative politeness: Respect the addressee's negative face (desire to be free from imposition, maintain autonomy) through hedging, apologies, giving options | "I don't mean to sound cold, but…"; "You're correct, and so are the people here who say some things are mistakes"; "I understand what you were saying."; "I hope I have answered some of the questions you are asking in the post." |
+| **-P** | Violation of positive politeness: Attack the addressee's positive face through mocking, flaming, etc. | "It's not rocket science, and it's pathetic if you genuinely can't see the difference."; "You are just an angry little person"; "People like you are the real danger because you always want to idolize the 'reformed thug or murderer' but never the people who don't murder at all." |
+| **-N** | Violation of negative politeness: Attack the addressee's negative face through commands, imperatives, intrusive questions that impose on their autonomy | "So how's school, love, family life?"; "You don't get to dictate morality"; "Remorse is the one thing that anyone with a conscience should have."; "Did you do it? If so why?" |
 
 ### II. Culpeper (2011a) Impoliteness Formulae
 *(subtypes of -P; specify in brackets)*
@@ -67,7 +69,9 @@ Examples include:
 1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages
 2. **Pay close attention to the speaker's intent in context, not only surface value** - what is the primary communicative goal?
 3. **Consider 2-3 most plausible options** and then select the primary communicative function, politeness (if strong enough), and meta-act (and subtype) when appropriate
-4. When asked for reasoning, please think aloud step-by-step inside [REASON]…[/REASON] before reaching your conclusion following the above procedure
+4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions)
+5. **Check for meta-acts** - is this reported speech, sarcasm, irony, or rhetorical?
+6. **When reasoning is requested**, think aloud step-by-step inside [REASON]…[/REASON] following steps 1-5
 
 ### Special Cases
 
