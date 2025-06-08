@@ -85,7 +85,6 @@ Based on **Brown & Levinson (1987)** Politeness Theory: Positive politeness aims
 
 ## 🚀 Usage
 
-### Basic Commands
 ```bash
 # Aannotate with default settings (GPT-4o with reasoning)
 python annotate.py --xlsx your_data.xlsx
