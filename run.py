@@ -93,7 +93,6 @@ Custom output file:
     python script.py --xlsx data/input.xlsx --output my_annotations.csv
 """
 
-
 __author__ = "hw56@iu.edu"
 __version__ = "0.4.0"
 __license__ = "MIT"
