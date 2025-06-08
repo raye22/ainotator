@@ -1,4 +1,4 @@
-"""Annotate CMC utterances with AI
+"""Annotate Computer-Mediated Discourse with LLMs
 
 Automates utterance-level annotation for computer-mediated communication (CMC)
 data using OpenAI, Anthropic Claude, Google Gemini, or local Llama models.
