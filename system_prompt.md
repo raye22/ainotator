@@ -75,8 +75,9 @@ Examples include:
 
 ### Special Cases
 
-- **Multi-functional utterances**: Choose the primary/dominant function when an utterance is uncertain or has multiple communicative goals
-- **Reported speech**: If the reported content is meaningful, annotate that rather than the reporting frame
+- **Multi-functional utterances**: Choose the primary/dominant function when an utterance is unclear or serves multiple communicative goals
+- **Reported speech**: If the reported content contains the most important communicative act in context, annotate that rather than the reporting frame
+
 
 ## Output Format
 
