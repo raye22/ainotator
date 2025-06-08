@@ -1,8 +1,7 @@
 """Annotate CMC utterances with AI
 
 Automates utterance-level annotation for computer-mediated communication (CMC)
-data using either OpenAI chat models or a local Llama-3.1 model.
-
+data using OpenAI, Anthropic Claude, Google Gemini, or local Llama models.
 
 1. Accepted workbook layouts
 
@@ -10,9 +9,9 @@ data using either OpenAI chat models or a local Llama-3.1 model.
     Msg# | Utterance # | Date | Time | User ID | Gender | Message
     (no Reply to_ID column)
 
-Soyeon style
+- Soyeon style
     Msg# | Date | Category | User ID | Reply to_ID | Message
-    (may contain several “Original post” rows per thread)
+    (may contain several "Original post" rows per thread)
 
 The loader `_load_xlsx()` normalises both layouts to a canonical dataframe with
 these columns:
@@ -21,69 +20,69 @@ these columns:
 
 Missing optional fields are filled with empty strings.
 
-2. Prompt construction
+2. Prompt construction (corpus-agnostic)
 
-- Background
-         - Yusra : the “JuvieThrowaw” juvenile-detention narrative
-         - Soyeon: the r/gaming “progressed farther in Terraria” scenario
+- Background context: Dynamically built from conversation data
+    - Detects threaded vs sequential conversation structure
+    - Includes original posts that started the discussion (Msg# == 1 or Category == "Original post")
+    - Provides generic forum discussion context without corpus-specific narratives
 
-- Thread starters
-         All rows where Msg# == 1 (Yusra) or Category == "Original post"
-         (Soyeon); included in every prompt to anchor the conversation.
+- Local context:
+    - Reply-aware (threaded): PREV = parent message based on Reply to_ID
+    - Sequential fallback: PREV = previous row, NEXT = next row
 
-- Local context
-         Soyeon (reply-aware):
-             PREV = most recent earlier message whose User ID equals Reply to_ID
-         Yusra (fallback):
-             PREV = previous row
-             NEXT = next row
+- User metadata: UserID, Gender, Time, Utterance # (when available)
 
-- User metadata line (UserID, Gender, Time, Utterance #)
+3. Reasoning requirement
 
-3. Reasoning
-
-With the --cot flag the prompt adds:
-    Think step-by-step inside [REASON]…[/REASON] before the answer.
-For the o3 model an extra sentence asks it to copy any hidden reasoning into the
-same bracketed block.
+ALL annotations require reasoning:
+- Step-by-step analysis inside [REASON]…[/REASON] before the final JSON
+- Reasoning quality validation (minimum length, meaningful content)
+- Failed reasoning results in retry with different seed
 
 4. Expected model output
-Exactly one JSON object wrapped in [ANNOT]…[/ANNOT]:
+Reasoning followed by exactly one JSON object:
 
-    [ANNOT]{"act":"<ACT>","politeness":"<POL>","meta":"<META>"}[/ANNOT]
+    [REASON] step-by-step analysis here [/REASON]
+    [ANNOT]{"act":"<ACT>","politeness":"<POL>","meta":"< META >"}[/ANNOT]
 
-Fields
-    act: one label from the CMC communicative-act taxonomy
-    politeness: Herring (+/-P, +/-N) or Culpeper codes
+Fields:
+    act: one label from the CMC communicative-act taxonomy (18 total)
+    politeness: Herring (+/-P, +/-N) or Culpeper codes with lenient dash parsing
     meta: optional meta-acts: non-bona fide, reported
 
 5. Run-time features
-- Resumable: rows with a non-empty act cell are skipped on rerun.
-- Moderation: rows rejected by OpenAI policy are marked __FLAGGED__.
-- Checkpoints: workbook is saved every 20 rows.
-- Audit trail: raw prompts/responses and cleaned annotations are streamed to
-  annotations/<model_tag>_seed_<seed>[_cot]/.
+- Resumable: rows with a non-empty act cell are skipped on rerun
+- Content policy handling: rows rejected by model policies are marked __FLAGGED__
+- Checkpoints: workbook is saved every 20 rows
+- Unified output: comprehensive CSV with input/output/annotations/reasoning
+- Audit trail: raw prompts/responses in output CSV
 
-6. Note:
-    We only support Llama-3.1 and OpenAI models.
-    - o3-2025-04-16
-    - gpt-4o-2024-08-06
-    - meta-llama/Llama-3.1-8B-Instruct
+6. Supported models
+- OpenAI: gpt-4o-*, o3-*
+- Anthropic: claude-*
+- Google: gemini-*
+- Local: meta-llama/Llama-3.1-8B-Instruct
+
+Environment variables required:
+- OPENAI_API_KEY (for OpenAI models)
+- ANTHROPIC_API_KEY (for Claude models)
+- GEMINI_API_KEY (for Gemini models)
 """
 
-__author__ = "The AInotator authors"
-__version__ = "0.1.0"
+__author__ = "hw56@iu.edu"
+__version__ = "0.4.0"
 __license__ = "MIT"
 
 
 import argparse
 import json
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import openai
 import pandas as pd
 from tqdm import tqdm
 
@@ -119,23 +118,21 @@ REASON_END = "[/REASON]"
 
 
 BACKGROUND_YUSRA = (
-    "Background: A Reddit user (“JuvieThrowaw”) shares that as a teenager they "
+    "**Background Context**: A Reddit user (JuvieThrowaw) shares that as a teenager they "
     "fatally shot their mother's abusive boyfriend after he harmed their sister, "
     "served juvenile time, and now struggles with whether to disclose this past "
     "to new friends and partners."
 )
 
 BACKGROUND_SOYEON = (
-    "Background: A Reddit user (CallSign_Fjor) posts in r/gaming that their "
+    "**Background Context**: A Reddit user (CallSign_Fjor) posts in r/gaming that their "
     "friends lose interest in finishing Terraria and other games whenever the "
     "user progresses farther, even though the user avoids using end-game gear "
     "and shares resources. The post asks why some players feel 'invalidated' "
-    "by someone else’s faster progression."
+    "by someone else's faster progression."
 )
 
 
-# load either Yusra-style or Soyeon-style workbook and
-# return a DataFrame with canonical column names expected downstream
 def _load_xlsx(path: str) -> pd.DataFrame:
     """Load either the Yusra sheet or the Soyeon sheet and return a
     canonical DataFrame with columns
@@ -190,13 +187,116 @@ def _load_xlsx(path: str) -> pd.DataFrame:
     return df
 
 
+def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> str:
+    """
+    Constructs a narrative-style local context for an utterance in the Soyeon corpus.
+
+    Assumptions:
+    - The dataframe includes a "Reply to_ID" column.
+    - Each message has a unique "Msg#" identifying the utterance.
+    - Replies can be chained using "Reply to_ID" to find the target's earlier messages.
+
+    Parameters:
+        row_idx (int): The row index of the utterance to annotate.
+        df (pd.DataFrame): The full DataFrame containing the corpus.
+
+    Returns:
+        str: A formatted string describing the utterance, its reply target,
+             earlier utterances from that user, and later replies to this utterance.
+    """
+    row = df.iloc[row_idx]
+    user_id = row["User ID"]
+    msg_id = row["Msg#"]
+    reply_to = row.get("Reply to_ID")
+    category = row.get("Category", "")
+    msg_text = str(row["Message"]).strip()
+
+    # start narrative
+    narrative = f'**Local Context**: We will be annotating Utterance #{msg_id} from {user_id}:\n"{msg_text}"\n'
+
+    if pd.notna(reply_to) and reply_to != "N/A":
+        referred_df = df[(df["User ID"] == reply_to) & (df.index < row_idx)]
+        if not referred_df.empty:
+            narrative += (
+                f'\nUtterance #{msg_id} is a reply to user "{reply_to}". '
+                f"The following earlier messages by {reply_to} may help contextualize the reply:"
+            )
+            for _, r in referred_df.iterrows():
+                narrative += (
+                    f'\n- Utterance #{r["Msg#"]}: "{str(r["Message"]).strip()}"'
+                )
+
+    # find first replies to this utterance from other users
+    later_replies = df[
+        (df["Reply to_ID"] == user_id)
+        & (df.index > row_idx)
+        & (df["User ID"] != user_id)
+    ]
+    if not later_replies.empty:
+        narrative += f"\n\nOther users also replied to {user_id} afterward. Here are some such replies:"
+        for _, rep in later_replies.head(3).iterrows():
+            narrative += f'\n- Utterance #{rep["Msg#"]} from {rep["User ID"]}: "{str(rep["Message"]).strip()}"'
+
+    return narrative
+
+
+def _format_local_context_narrative_yusra(row_idx: int, df: pd.DataFrame) -> str:
+    """
+    Constructs a narrative-style local context for an utterance in the Yusra corpus.
+    For Yusra style (sequential), we use simple prev/next context.
+
+    Parameters:
+        row_idx (int): The row index of the utterance to annotate.
+        df (pd.DataFrame): The full DataFrame containing the corpus.
+
+    Returns:
+        str: A formatted string describing the utterance and its context.
+    """
+    row = df.iloc[row_idx]
+    user_id = row["User ID"]
+    msg_id = row["Msg#"]
+    utterance_num = row.get("Utterance #", "")
+    msg_text = str(row["Message"]).strip()
+
+    # start narrative
+    narrative = f'**Local Context**: We will be annotating Utterance #{msg_id} (#{utterance_num}) from {user_id}:\n"{msg_text}"\n'
+
+    # previous message context
+    if row_idx > 0:
+        prev_row = df.iloc[row_idx - 1]
+        prev_text = str(prev_row["Message"]).strip()
+        prev_user = prev_row["User ID"]
+        narrative += (
+            f'\nThis follows the previous message from {prev_user}:\n"{prev_text}"'
+        )
+
+    # next message context
+    if row_idx < len(df) - 1:
+        next_row = df.iloc[row_idx + 1]
+        next_text = str(next_row["Message"]).strip()
+        next_user = next_row["User ID"]
+        narrative += f'\n\nIt is followed by a message from {next_user}:\n"{next_text}"'
+
+    return narrative
+
+
+def _format_local_context_narrative(row_idx: int, df: pd.DataFrame) -> str:
+    """
+    Router function to choose the appropriate narrative formatting based on corpus type.
+    """
+    if "Category" in df.columns:
+        return _format_local_context_narrative_soyeon(row_idx, df)
+    else:
+        return _format_local_context_narrative_yusra(row_idx, df)
+
+
 def _get_local_context(idx: int, df: pd.DataFrame) -> Tuple[str, str]:
     """
     Return (prev_msg, next_msg) for row idx.
 
     - If the sheet has a non-empty 'Reply to_ID' column we fetch only the
       *parent* message (prev_msg) and leave next_msg blank, because real-world
-      reply trees rarely need a “next child” for local context.
+      reply trees rarely need a "next child" for local context.
     - Otherwise fall back to simple previous / next rows (Yusra layout).
     """
     row = df.iloc[idx]
@@ -204,7 +304,7 @@ def _get_local_context(idx: int, df: pd.DataFrame) -> Tuple[str, str]:
     if "Reply to_ID" in df.columns and df["Reply to_ID"].astype(str).str.strip().any():
         prev_msg = ""
         reply_to = str(row.get("Reply to_ID", "")).strip()
-        if reply_to:
+        if reply_to and reply_to != "N/A":
             earlier = df.iloc[:idx]
             mask = earlier["User ID"].astype(str) == reply_to
             if mask.any():
@@ -220,60 +320,76 @@ def _get_local_context(idx: int, df: pd.DataFrame) -> Tuple[str, str]:
 def _build_messages(
     system_prompt: str,
     context: Tuple[str, str, str],
-    include_cot: bool,
     global_context: str,
     user_meta: str,
-    model_tag: str,  # "gpt-4o", "o3", or "llama"
+    model_tag: str,
 ) -> List[Dict]:
-    """Compose the list of chat messages for OpenAI / vLLM, including
-    global context and user metadata."""
+    """Compose the list of chat messages for API calls, with background + system_prompt as system role,
+    and thread-aware user prompt in narrative form."""
 
     prev_msg, target_msg, next_msg = context
 
-    # user-side blocks
-    user_block = (
-        f"{user_meta}"
-        f"[PREV] {prev_msg or '<NONE>'}\n"
-        f"[TARGET] {target_msg}\n"
-        f"[NEXT] {next_msg or '<NONE>'}\n"
+    # use the pre-formatted narrative from user_meta
+    narrative_intro = user_meta
+
+    task_instruction = (
+        "**Task Instruction**: You are given a single utterance from Reddit. Please read the background and surrounding context carefully, "
+        "then decide on the communicative act of the target utterance, its politeness value (if clearly expressed), "
+        "and any applicable meta-acts. Use the CMC Communicative Act Taxonomy developed by Herring, Das, and Penumarthy (2005), "
+        "revised in 2024 by Herring and Ge-Stadnyk, to guide your annotation. For politeness and impoliteness, refer to Herring (1994) "
+        "and Culpeper's (2011a) frameworks. For meta-acts such as reported and non-bona fide speech, follow the definitions included in the taxonomy."
     )
 
-    reasoning_block = ""
-    if include_cot:
-        reasoning_block = (
-            "\nThink step-by-step inside [REASON]…[/REASON] before the answer."
+    # ALWAYS include reasoning instructions
+    reasoning_block = (
+        "\n**Reasoning**: Provide step-by-step analysis inside [REASON]…[/REASON] before your final answer. "
+        "Follow the annotation procedure: "
+        "(1) Read the target utterance in context, "
+        "(2) Identify the speaker's primary communicative intent, "
+        "(3) Consider 2-3 most plausible act options, "
+        "(4) Evaluate politeness/impoliteness if clearly expressed, "
+        "(5) Check for meta-acts (reported speech, sarcasm, etc.)."
+    )
+
+    if model_tag == "o3":
+        reasoning_block += (
+            "\nIf you used hidden or internal reasoning anywhere, copy **all** of that "
+            "reasoning verbatim inside the same [REASON]…[/REASON] block."
         )
-        if model_tag == "o3":
-            reasoning_block += (
-                "\nIf you used hidden or internal reasoning anywhere, copy **all** of that "
-                "reasoning verbatim inside the same [REASON]…[/REASON] block."
-            )
 
+    # always mention reasoning requirement in format block
     format_block = (
-        "\nReturn the annotation as one JSON object wrapped EXACTLY like:\n"
-        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","meta":"<META>"}}{END_TAG}'
+        f"\n**Output Format**: First provide your step-by-step reasoning inside {REASON_START}…{REASON_END}, "
+        f"then return the annotation as one JSON object wrapped EXACTLY like:\n"
+        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","meta":"< META >"}}{END_TAG}'
     )
-
-    # system block
-    system_block = f"{global_context.strip()}\n\n{system_prompt}"
 
     return [
-        {"role": "system", "content": system_block},
-        {"role": "user", "content": user_block + reasoning_block + format_block},
+        {"role": "system", "content": system_prompt.strip()},
+        {
+            "role": "user",
+            "content": f"{task_instruction}\n\n{global_context.strip()}\n\n{narrative_intro}\n{reasoning_block}\n{format_block}",
+        },
     ]
 
 
 def _parse_annotation(text: str) -> Dict:
-    """Extract reasoning (optional) and the JSON annotation; validate all fields."""
+    """Extract reasoning and the JSON annotation; validate all fields."""
 
-    # REASON block (optional)
+    # REASON block (required)
     reason = ""
     if REASON_START in text and REASON_END in text:
         reason = text.split(REASON_START, 1)[1].split(REASON_END, 1)[0].strip()
 
+    # Always validate reasoning presence and quality
+    if len(reason) < 20:  # Minimum meaningful reasoning length
+        raise ValueError(
+            f"reasoning too short or missing (got {len(reason)} chars, need ≥20)"
+        )
+
     # ANNOT block (required)
     if START_TAG not in text or END_TAG not in text:
-        raise ValueError("wrapper tags not found")
+        raise ValueError("annotation wrapper tags not found")
 
     json_str = text.split(START_TAG, 1)[1].split(END_TAG, 1)[0].strip()
     anno = json.loads(json_str)
@@ -316,22 +432,86 @@ def _parse_annotation(text: str) -> Dict:
     return {"act": act, "politeness": pol, "meta": meta, "reason": reason}
 
 
+def _get_model_client(model: str):
+    """Initialize the appropriate client based on model name."""
+    if model.startswith(("gpt-", "o3-")):
+        try:
+            import openai
+        except ImportError:
+            raise ImportError(
+                "OpenAI package required for GPT models. Install with: pip install openai"
+            )
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "OPENAI_API_KEY environment variable required for OpenAI models"
+            )
+
+        return openai.OpenAI(api_key=api_key), "openai"
+
+    elif model.startswith("claude-"):
+        try:
+            import anthropic
+        except ImportError:
+            raise ImportError(
+                "Anthropic package required for Claude models. Install with: pip install anthropic"
+            )
+
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "ANTHROPIC_API_KEY environment variable required for Claude models"
+            )
+
+        return anthropic.Anthropic(api_key=api_key), "anthropic"
+
+    elif model.startswith("gemini-"):
+        try:
+            import google.generativeai as genai
+        except ImportError:
+            raise ImportError(
+                "Google AI package required for Gemini models. Install with: pip install google-generativeai"
+            )
+
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY environment variable required for Gemini models"
+            )
+
+        genai.configure(api_key=api_key)
+        return genai.GenerativeModel(model), "gemini"
+
+    elif "llama" in model.lower():
+        try:
+            from transformers import AutoTokenizer
+            from vllm import LLM, SamplingParams
+        except ImportError:
+            raise ImportError(
+                "transformers and vllm packages required for Llama models. Install with: pip install transformers vllm"
+            )
+
+        tokenizer = AutoTokenizer.from_pretrained(model)
+        llm = LLM(model=model, dtype="bfloat16")
+        return (llm, tokenizer), "llama"
+
+    else:
+        raise ValueError(f"Unsupported model: {model}")
+
+
 def _annotate_row(
     row_idx: int,
     df: pd.DataFrame,
     sys_prompt: str,
     model: str,
+    client,
+    client_type: str,
     max_tries: int,
-    include_cot: bool,
     global_context: str,
     user_meta: str,
-    llm=None,
-    tokenizer=None,
 ) -> Tuple[Dict, List[Dict]]:
-    """Annotate one DataFrame row, retrying with incremental seeds.
-    Works with either OpenAI chat models (gpt-4o, o3) or a local vLLM
-    instance of Llama-3.1-8B-Instruct.
-    """
+    """Annotate one DataFrame row, retrying with incremental seeds."""
     raw_records: List[Dict] = []
 
     prev_msg, next_msg = _get_local_context(row_idx, df)
@@ -344,21 +524,16 @@ def _annotate_row(
         messages = _build_messages(
             sys_prompt,
             (prev_msg, targ_msg, next_msg),
-            include_cot,
             global_context,
             user_meta,
-            (
-                "o3"
-                if model.startswith("o3")
-                else "gpt-4o" if model.startswith("gpt-4o") else "llama"
-            ),
+            model.split("-")[0] if "-" in model else model,
         )
 
-        # inference
-        if llm is None:  # OpenAI endpoint
-            try:
+        # inference based on client type
+        try:
+            if client_type == "openai":
                 if model.startswith("o3"):
-                    resp = openai.chat.completions.create(
+                    resp = client.chat.completions.create(
                         model=model,
                         messages=messages,
                         temperature=1.0,
@@ -366,35 +541,64 @@ def _annotate_row(
                         seed=seed,
                     )
                 else:
-                    resp = openai.chat.completions.create(
+                    resp = client.chat.completions.create(
                         model=model,
                         messages=messages,
                         temperature=0.7,
                         top_p=0.95,
                         seed=seed,
                     )
-            except openai.BadRequestError as e:
-                # flagged by moderation — mark and bail out
+                content = resp.choices[0].message.content
+                ts = resp.created
+
+            elif client_type == "anthropic":
+                resp = client.messages.create(
+                    model=model,
+                    max_tokens=1024,
+                    temperature=0.7,
+                    messages=messages,
+                )
+                content = resp.content[0].text
+                ts = time.time()
+
+            elif client_type == "gemini":
+                # Convert to Gemini format
+                prompt_text = f"{messages[0]['content']}\n\n{messages[1]['content']}"
+                resp = client.generate_content(
+                    prompt_text,
+                    generation_config={"temperature": 0.7, "max_output_tokens": 1024},
+                )
+                content = resp.text
+                ts = time.time()
+
+            elif client_type == "llama":
+                llm, tokenizer = client
+                from vllm import SamplingParams
+
+                prompt = tokenizer.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                )
+                out = llm.generate(
+                    [prompt],
+                    sampling_params=SamplingParams(
+                        temperature=0.7,
+                        top_p=0.95,
+                        seed=seed,
+                    ),
+                )[0].outputs[0]
+                content = out.text
+                ts = time.time()
+
+        except Exception as e:
+            if "policy" in str(e).lower() or "safety" in str(e).lower():
                 logging.warning(
                     f"Row {row_idx} seed {seed} flagged by policy; skipping."
                 )
                 raise RuntimeError("policy_flagged")
-            content = resp.choices[0].message.content
-            ts = resp.created
-        else:  # local Llama-3.1 via vLLM
-            prompt = tokenizer.apply_chat_template(
-                messages, tokenize=False, add_generation_prompt=True
-            )
-            out = llm.generate(
-                [prompt],
-                sampling_params=SamplingParams(
-                    temperature=0.7,
-                    top_p=0.95,
-                    seed=seed,
-                ),
-            )[0].outputs[0]
-            content = out.text
-            ts = time.time()
+            else:
+                logging.warning(f"Row {row_idx} seed {seed} API error: {e}")
+                time.sleep(2**attempt)
+                continue
 
         raw_records.append(
             {
@@ -408,10 +612,6 @@ def _annotate_row(
 
         try:
             anno = _parse_annotation(content)
-            # make sure reasoning was really captured
-            if include_cot and len(anno.get("reason", "")) < 5:
-                raise ValueError("reasoning too short – likely not captured")
-
             anno.update({"row_idx": row_idx, "seed": seed})
             return anno, raw_records
 
@@ -422,18 +622,65 @@ def _annotate_row(
     raise RuntimeError(f"row {row_idx}: parse failed after {max_tries} tries")
 
 
-def main() -> None:
-    """Entry point: load data, replay prior annotations, annotate rows, checkpoint,
-    and save final XLSX."""
-    CHECKPOINT_EVERY = 20  # rows after which we write df back to Excel
+def _create_output_dataframe(
+    df: pd.DataFrame, annotations: List[Dict], raw_records: List[Dict]
+) -> pd.DataFrame:
+    """Create comprehensive output dataframe with original data + annotations + raw data."""
 
-    # 1) CLI
+    # start with original data
+    output_df = df.copy()
+
+    # add annotation columns
+    output_df["annotation_act"] = ""
+    output_df["annotation_politeness"] = ""
+    output_df["annotation_meta"] = ""
+    output_df["annotation_reasoning"] = ""
+    output_df["raw_prompt"] = ""
+    output_df["raw_response"] = ""
+    output_df["annotation_seed"] = ""
+    output_df["annotation_timestamp"] = ""
+
+    # fill in annotations
+    for anno in annotations:
+        row_idx = anno["row_idx"]
+        output_df.at[row_idx, "annotation_act"] = anno.get("act", "")
+        output_df.at[row_idx, "annotation_politeness"] = anno.get("politeness", "")
+        output_df.at[row_idx, "annotation_meta"] = anno.get("meta", "")
+        output_df.at[row_idx, "annotation_reasoning"] = anno.get("reason", "")
+        output_df.at[row_idx, "annotation_seed"] = anno.get("seed", "")
+
+    # fill in raw data (use the successful attempt)
+    for raw in raw_records:
+        row_idx = raw["row_idx"]
+        seed = raw["seed"]
+        # Only use the raw data from successful annotations
+        if any(a["row_idx"] == row_idx and a["seed"] == seed for a in annotations):
+            output_df.at[row_idx, "raw_prompt"] = raw["prompt"]
+            output_df.at[row_idx, "raw_response"] = raw["response"]
+            output_df.at[row_idx, "annotation_timestamp"] = raw["timestamp"]
+
+    return output_df
+
+
+def main() -> None:
+    """Entry point: load data, annotate rows, and save comprehensive output file."""
+
+    # CLI
     parser = argparse.ArgumentParser()
-    parser.add_argument("--xlsx", default="data/Yusra.xlsx")
-    parser.add_argument("--model", default="gpt-4o-2024-08-06")
-    parser.add_argument("--max_tries", type=int, default=20)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--cot", action="store_true")
+    parser.add_argument("--xlsx", default="data/Yusra.xlsx", help="Input Excel file")
+    parser.add_argument(
+        "--output", help="Output file name (auto-generated if not provided)"
+    )
+    parser.add_argument(
+        "--model", default="gpt-4o-2024-08-06", help="Model to use for annotation"
+    )
+    parser.add_argument(
+        "--max_tries", type=int, default=20, help="Maximum retry attempts"
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Debug mode (first 10 rows only)"
+    )
+    parser.add_argument("--resume", help="Resume from existing output file")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -441,81 +688,85 @@ def main() -> None:
     )
     logging.info("Starting annotation run")
 
-    # load & normalise workbook (handles either layout)
+    # load & normalize workbook
     df = _load_xlsx(args.xlsx)
 
-    # replay any previously‐logged annotations so we skip them on resume
-    if args.model.startswith("gpt-4o"):
-        model_tag = "gpt-4o"
-    elif args.model.startswith("o3"):
-        model_tag = "o3"
-    elif "llama" in args.model.lower():
-        model_tag = "llama"
+    # determine output filename
+    if args.output:
+        output_path = args.output
     else:
-        raise ValueError("Unknown model. Only support Llama-3.1 and OpenAI API.")
+        input_stem = Path(args.xlsx).stem
+        model_name = args.model.replace("/", "_").replace("-", "_")
+        output_path = f"{input_stem}_annotated_{model_name}.csv"
 
-    primary_seed = FIXED_SEEDS[0]
-    cot_suffix = "_cot" if args.cot else ""
-    root = (
-        Path("soyeon_annotations")
-        if "Category" in df.columns
-        else Path("yusra_annotations")
-    )
-    out_dir = root / f"{model_tag}_seed_{primary_seed}{cot_suffix}"
-    clean_path = out_dir / "annot_clean.csv"
+    # initialize tracking
+    annotations = []
+    all_raw_records = []
+    completed_rows = set()
 
-    if clean_path.exists():
-        prev = pd.read_csv(clean_path)
-        for _, r in prev.iterrows():
-            ridx = int(r["row_idx"])
-            act = r["act"]
-            if act and act not in ("__FAILED__", "__FLAGGED__"):
-                df.at[ridx, "act"] = act
-    # 3) build dynamic global context
-    first_posts = df.loc[df["Msg#"] == 1, "Message"].dropna().tolist()
-    thread_summary = BACKGROUND_YUSRA
+    # resume from existing file if specified
+    if args.resume and Path(args.resume).exists():
+        logging.info(f"Resuming from {args.resume}")
+        resume_df = pd.read_csv(args.resume)
+        for idx, row in resume_df.iterrows():
+            if row.get("annotation_act") and str(
+                row.get("annotation_act")
+            ).strip() not in ("", "__FAILED__", "__FLAGGED__"):
+                annotations.append(
+                    {
+                        "row_idx": idx,
+                        "act": row["annotation_act"],
+                        "politeness": row.get("annotation_politeness", ""),
+                        "meta": row.get("annotation_meta", ""),
+                        "reason": row.get("annotation_reasoning", ""),
+                        "seed": row.get("annotation_seed", ""),
+                    }
+                )
+                completed_rows.add(idx)
+
+    # build dynamic global context
     if "Category" in df.columns:  # Soyeon layout
         thread_summary = BACKGROUND_SOYEON
+        # Find original posts
+        original_posts = (
+            df[df["Category"] == "Original post"]["Message"].dropna().tolist()
+        )
+    else:  # Yusra layout
+        thread_summary = BACKGROUND_YUSRA
+        # find first posts
+        original_posts = df[df["Msg#"] == 1]["Message"].dropna().tolist()
+
     dynamic_global_context = "\n\n".join(
         [
             thread_summary,
-            "Thread starter messages:\n" + "\n".join(f"- {m}" for m in first_posts),
+            "Thread starter messages:\n" + "\n".join(f"- {m}" for m in original_posts),
         ]
     )
 
-    # 4) local / remote setup
-    is_llama = model_tag == "llama"
-    tokenizer = llm = None
-    if is_llama:
-        from transformers import AutoTokenizer
-        from vllm import LLM, SamplingParams
+    # initialize model client
+    client, client_type = _get_model_client(args.model)
 
-        tokenizer = AutoTokenizer.from_pretrained(args.model)
-        llm = LLM(model=args.model, dtype="bfloat16")
+    # load system prompt
+    system_prompt_path = Path("system_prompt.md")
+    if not system_prompt_path.exists():
+        logging.warning("system_prompt.md not found, using default prompt")
+        system_prompt = (
+            "You are an expert annotator for computer-mediated communication data."
+        )
+    else:
+        system_prompt = system_prompt_path.read_text(encoding="utf-8")
 
-    # 5) ensure annotation columns exist
-    for col in ("act", "politeness", "meta"):
-        if col not in df.columns:
-            df[col] = ""
-
-    # 6) determine rows to annotate
-    todo_idx = df.index[df["act"].fillna("") == ""]
+    # determine rows to annotate
+    todo_idx = [idx for idx in df.index if idx not in completed_rows]
     if args.debug:
         todo_idx = todo_idx[:10]
         logging.info("Debug mode: first 10 only")
 
-    system_prompt = Path("system_prompt.md").read_text(encoding="utf-8")
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
 
-    # 7) main loop
-    for count, idx in enumerate(pbar, start=1):
-        row = df.iloc[idx]
-        user_meta = (
-            f"UserID: {row['User ID']}, "
-            f"Gender: {row['Gender']}, "
-            f"Time: {row['Time']}, "
-            f"Utterance#: {row['Utterance #']}\n"
-        )
+    # main annotation loop
+    for idx in pbar:
+        user_meta = _format_local_context_narrative(idx, df)
 
         try:
             anno, raws = _annotate_row(
@@ -523,65 +774,55 @@ def main() -> None:
                 df,
                 system_prompt,
                 args.model,
+                client,
+                client_type,
                 args.max_tries,
-                include_cot=args.cot,
                 global_context=dynamic_global_context,
                 user_meta=user_meta,
-                llm=llm,
-                tokenizer=tokenizer,
             )
 
-            # write back to DataFrame
-            df.loc[idx, ["act", "politeness", "meta"]] = [
-                anno["act"],
-                anno["politeness"],
-                anno["meta"],
-            ]
-
-            # append logs
-            pd.DataFrame([anno]).to_csv(
-                out_dir / "annot_clean.csv",
-                mode="a",
-                header=not clean_path.exists(),
-                index=False,
-            )
-            pd.DataFrame(raws).to_csv(
-                out_dir / "annot_raw.csv",
-                mode="a",
-                header=not (out_dir / "annot_raw.csv").exists(),
-                index=False,
-            )
-            df.iloc[[idx]].to_csv(
-                out_dir / "annot_seq.csv",
-                mode="a",
-                header=not (out_dir / "annot_seq.csv").exists(),
-                index=False,
-            )
-
-            logging.info(f"Annotated row {idx}")
+            annotations.append(anno)
+            all_raw_records.extend(raws)
+            logging.info(f"Annotated row {idx}: {anno['act']}")
 
         except RuntimeError as exc:
             flag = "__FLAGGED__" if str(exc) == "policy_flagged" else "__FAILED__"
-            logging.error(exc)
-            df.loc[idx, ["act", "politeness", "meta"]] = [flag, "", ""]
-            df.iloc[[idx]].to_csv(
-                out_dir / "annot_seq.csv",
-                mode="a",
-                header=not (out_dir / "annot_seq.csv").exists(),
-                index=False,
-            )
+            logging.error(f"Row {idx}: {exc}")
 
-        # periodic checkpoint to XLSX
-        if not args.debug and count % CHECKPOINT_EVERY == 0:
-            df.to_excel(args.xlsx, index=False)
-            logging.info("Checkpoint saved to Excel")
+            # create failed annotation
+            failed_anno = {
+                "row_idx": idx,
+                "act": flag,
+                "politeness": "",
+                "meta": "",
+                "reason": "",
+                "seed": FIXED_SEEDS[0],
+            }
+            annotations.append(failed_anno)
 
-    # 8) final save
-    if not args.debug:
-        df.to_excel(args.xlsx, index=False)
-        logging.info("Annotation run complete – final workbook saved")
-    else:
-        logging.info("Debug run complete — no changes written to workbook")
+        # periodic save (every 20 rows)
+        if len(annotations) % 20 == 0:
+            output_df = _create_output_dataframe(df, annotations, all_raw_records)
+            output_df.to_csv(output_path, index=False, encoding="utf-8-sig")
+            logging.info(f"Checkpoint saved: {len(annotations)} rows completed")
+
+    # final save
+    output_df = _create_output_dataframe(df, annotations, all_raw_records)
+    output_df.to_csv(output_path, index=False, encoding="utf-8-sig")
+
+    # summary statistics
+    total_annotations = len(
+        [a for a in annotations if a["act"] not in ("__FAILED__", "__FLAGGED__")]
+    )
+    failed_count = len([a for a in annotations if a["act"] == "__FAILED__"])
+    flagged_count = len([a for a in annotations if a["act"] == "__FLAGGED__"])
+
+    logging.info(f"Annotation complete!")
+    logging.info(f"Output saved to: {output_path}")
+    logging.info(f"Total annotations: {total_annotations}")
+    logging.info(f"Failed: {failed_count}")
+    logging.info(f"Flagged: {flagged_count}")
+    logging.info(f"Success rate: {total_annotations / len(annotations) * 100:.1f}%")
 
 
 if __name__ == "__main__":
