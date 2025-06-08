@@ -11,7 +11,7 @@ For each utterance in context, we assign:
 
 Annotations are generated through structured prompting with **mandatory reasoning** and saved in a reproducible, debuggable format. The tool supports:
 
-- **Multiple model backends**: OpenAI (GPT-4o, O3), Anthropic Claude, Google Gemini, and local Llama-3.1
+- **Multiple model backends**: OpenAI GPT, Anthropic Claude, Google Gemini, and Meta Llama
 - **Corpus-agnostic processing**: Works with any CMC dataset structure
 - **Resumable runs** with comprehensive progress logging
 - **Always-on reasoning**: Every annotation includes step-by-step analysis
@@ -205,13 +205,6 @@ pip install transformers vllm
 # Ensure GPU resources are available
 ```
 
-## 🤝 Contributions
-Contributions are welcome! Feel free to open an issue or submit a pull request. Areas of particular interest:
-- Additional model backend support
-- New annotation schemas
-- Performance optimizations
-- Integration with other CMC analysis tools
-
 ## 📜 Version History
 
 - **v0.4.0** *(Current)*
@@ -241,6 +234,6 @@ Contributions are welcome! Feel free to open an issue or submit a pull request. 
 
 MIT
 
-## 📧 Contact
+## 🤝 Contributions
 
-For questions, suggestions, or collaboration opportunities, please open an issue on GitHub or contact the maintainers.
+For questions, suggestions, or collaboration opportunities, please open an issue on GitHub or contact Haining Wang (hw56@iu.edu).
