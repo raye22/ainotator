@@ -25,11 +25,12 @@ Missing optional fields are filled with empty strings.
 - Background context: Dynamically built from conversation data
     - Detects threaded vs sequential conversation structure
     - Includes original posts that started the discussion (Msg# == 1 or Category == "Original post")
-    - Provides generic forum discussion context without corpus-specific narratives
+    - Uses corpus-specific background narratives (BACKGROUND_YUSRA/BACKGROUND_SOYEON)
 
 - Local context:
-    - Reply-aware (threaded): PREV = parent message based on Reply to_ID
-    - Sequential fallback: PREV = previous row, NEXT = next row
+    - Reply-aware (threaded): Shows parent message and reply chain based on Reply to_ID
+    - Sequential fallback: Shows previous/next messages in chronological order
+    - Narrative format with conversational context and user interaction patterns
 
 - User metadata: UserID, Gender, Time, Utterance # (when available)
 
@@ -37,7 +38,8 @@ Missing optional fields are filled with empty strings.
 
 ALL annotations require reasoning:
 - Step-by-step analysis inside [REASON]…[/REASON] before the final JSON
-- Reasoning quality validation (minimum length, meaningful content)
+- Minimum 20 characters of meaningful reasoning content
+- Reasoning quality validation prevents empty or trivial explanations
 - Failed reasoning results in retry with different seed
 
 4. Expected model output
@@ -52,11 +54,11 @@ Fields:
     meta: optional meta-acts: non-bona fide, reported
 
 5. Run-time features
-- Resumable: rows with a non-empty act cell are skipped on rerun
+- Resumable: rows with existing annotations are skipped on rerun
 - Content policy handling: rows rejected by model policies are marked __FLAGGED__
-- Checkpoints: workbook is saved every 20 rows
-- Unified output: comprehensive CSV with input/output/annotations/reasoning
-- Audit trail: raw prompts/responses in output CSV
+- Checkpoints: output file is saved every 20 rows for progress tracking
+- Comprehensive output: single CSV with all original data, annotations, reasoning, and raw API data
+- No file modification: original Excel files are never modified
 
 6. Supported models
 - OpenAI: gpt-4o-*, o3-*
@@ -68,7 +70,29 @@ Environment variables required:
 - OPENAI_API_KEY (for OpenAI models)
 - ANTHROPIC_API_KEY (for Claude models)
 - GEMINI_API_KEY (for Gemini models)
+
+7. Output structure
+Creates a single comprehensive CSV file with:
+- All original columns from input Excel file
+- annotation_act, annotation_politeness, annotation_meta: parsed annotations
+- annotation_reasoning: extracted reasoning from model response
+- raw_prompt, raw_response: complete API interaction data
+- annotation_seed, annotation_timestamp: reproducibility metadata
+
+8. Usage examples
+Basic annotation:
+    python script.py --xlsx data/Soyeon.xlsx --model gpt-4o-2024-08-06
+
+Resume previous run:
+    python script.py --xlsx data/Yusra.xlsx --resume previous_output.csv
+
+Debug mode (first 10 rows):
+    python script.py --xlsx data/input.xlsx --debug
+
+Custom output file:
+    python script.py --xlsx data/input.xlsx --output my_annotations.csv
 """
+
 
 __author__ = "hw56@iu.edu"
 __version__ = "0.4.0"
