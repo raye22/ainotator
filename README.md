@@ -19,6 +19,21 @@ Annotations are generated through structured prompting with **mandatory reasonin
 - **Reproducibility** through fixed seeds and complete audit trails
 - **No file modification**: Original data files are never altered
 
+## 💡 Why It Matters
+
+Manual annotation of online discourse is slow, inconsistent, and hard to scale. Traditional rule-based systems struggle with context, sarcasm, and pragmatic nuance.
+
+AInotator offers a **practical, theory-aware solution** that:
+- Captures communicative intent beyond surface form
+- Handles non-literal language (sarcasm, irony, rhetorical questions)
+- Maintains theoretical grounding in established CMC frameworks
+- Scales to large datasets while preserving annotation quality
+- Provides transparent reasoning for every decision
+
+Perfect for CMC researchers studying **stance, identity, politeness, conflict, and solidarity** at scale.
+
+> LLMs may be changing the game — but we still define the rules.
+
 ## 🧭 Annotation Schema
 
 The model follows the **CMC Act Taxonomy** (Herring, Das, and Penumarthy 2005; revised 2024) adapted from CMC pragmatics and politeness theory.
@@ -162,21 +177,6 @@ your_data_annotated_gpt_4o_2024_08_06.csv
 - **Progress tracking** with success/failure/flagged counts
 - **Validation at multiple levels**: JSON format, act labels, politeness codes
 - **Reasoning requirement** prevents superficial annotations
-
-## 💡 Why It Matters
-
-Manual annotation of online discourse is slow, inconsistent, and hard to scale. Traditional rule-based systems struggle with context, sarcasm, and pragmatic nuance.
-
-AInotator offers a **practical, theory-aware solution** that:
-- Captures communicative intent beyond surface form
-- Handles non-literal language (sarcasm, irony, rhetorical questions)
-- Maintains theoretical grounding in established CMC frameworks
-- Scales to large datasets while preserving annotation quality
-- Provides transparent reasoning for every decision
-
-Perfect for CMC researchers studying **stance, identity, politeness, conflict, and solidarity** at scale.
-
-> LLMs may be changing the game — but we still define the rules.
 
 ## 🛠️ Installation & Setup
 
