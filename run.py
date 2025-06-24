@@ -81,13 +81,13 @@ Creates a single comprehensive CSV file with:
 
 8. Usage examples
 Basic annotation:
-    python script.py --xlsx data/Soyeon.xlsx --model gpt-4o-2024-08-06
+    python run.py --xlsx data/Soyeon.xlsx --model gpt-4o-2024-08-06
 
 Resume previous run:
-    python script.py --xlsx data/Yusra.xlsx --resume previous_output.csv
+    python run.py --xlsx data/Yusra.xlsx --resume previous_output.csv
 
 Debug mode (first 10 rows):
-    python script.py --xlsx data/input.xlsx --debug
+    python run.py --xlsx data/input.xlsx --debug
 """
 
 __author__ = "hw56@iu.edu"
