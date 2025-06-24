@@ -88,9 +88,6 @@ Resume previous run:
 
 Debug mode (first 10 rows):
     python script.py --xlsx data/input.xlsx --debug
-
-Custom output file:
-    python script.py --xlsx data/input.xlsx --output my_annotations.csv
 """
 
 __author__ = "hw56@iu.edu"
@@ -436,10 +433,8 @@ def _parse_annotation(text: str) -> Dict:
         if "[" in raw_pol and "]" in raw_pol:
             base, subtype = raw_pol.split("[", 1)
             pol = base.strip()
-            meta_from_pol = subtype.rstrip("]").strip()
         else:
             pol = raw_pol
-            meta_from_pol = ""
 
     if pol and pol not in ALLOWED_POLITENESS:
         raise ValueError(f"invalid politeness: {pol}")
@@ -517,7 +512,7 @@ def _get_model_client(model: str):
                 "transformers and vllm packages required for Llama models. Install with: pip install transformers vllm"
             )
 
-        tokenizer = AutoTokenizer.from_pretrained(model)
+        tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
         llm = LLM(model=model, dtype="bfloat16")
         return (llm, tokenizer), "llama"
 
@@ -694,7 +689,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--xlsx", default="data/Yusra.xlsx", help="Input Excel file")
     parser.add_argument(
-        "--output", help="Output file name (auto-generated if not provided)"
+        "--output_dir", default="annotations", help="Output dir name (auto-generated file names)"
     )
     parser.add_argument(
         "--model", default="gpt-4o-2024-08-06", help="Model to use for annotation"
@@ -717,12 +712,10 @@ def main() -> None:
     df = _load_xlsx(args.xlsx)
 
     # determine output filename
-    if args.output:
-        output_path = args.output
-    else:
-        input_stem = Path(args.xlsx).stem
-        model_name = args.model.replace("/", "_").replace("-", "_")
-        output_path = f"{input_stem}_annotated_{model_name}.csv"
+    input_stem = Path(args.xlsx).stem
+    model_name = args.model.replace("/", "_").replace("-", "_")
+    os.makedirs(args.output_dir, exist_ok=True)
+    output_path = f"{args.output_dir}/{input_stem}_annotated_{model_name}.csv"
 
     # initialize tracking
     annotations = []
@@ -774,10 +767,7 @@ def main() -> None:
     # load system prompt
     system_prompt_path = Path("system_prompt.md")
     if not system_prompt_path.exists():
-        logging.warning("system_prompt.md not found, using default prompt")
-        system_prompt = (
-            "You are an expert annotator for computer-mediated communication data."
-        )
+        raise ValueError('System prompt not specified.')
     else:
         system_prompt = system_prompt_path.read_text(encoding="utf-8")
 
@@ -786,6 +776,7 @@ def main() -> None:
     if args.debug:
         todo_idx = todo_idx[:10]
         logging.info("Debug mode: first 10 only")
+        logging.info(f"Debug output will be saved to: {output_path}")
 
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
 
