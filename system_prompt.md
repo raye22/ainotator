@@ -38,7 +38,7 @@ Use the following definitions and examples to identify the most appropriate labe
 
 ## Politeness & Impoliteness Annotation
 
-Only annotate when a (non-)politeness act is clearly expressed.
+Only annotate when a clear (non-)politeness act is present, as defined by the subtypes described below.
 
 ### I. Herring (1994)
 
@@ -76,6 +76,10 @@ Examples include:
 ### Special Cases
 
 - **Multi-functional utterances**: Choose the primary/dominant function when an utterance is unclear or serves multiple communicative goals
+- Choose the **less frequent** act **only if multiple acts are equally plausible**, as it is typically more informative.
+  - **Most common**: claim, inform, inquire, react, elaborate
+  - **Next most common**: direct, desire, accept, reject, congratulate, request, invite
+  - **Least common**: manage, behave, thank, apologize, greet, repair
 - **Reported speech**: If the reported content contains the most important communicative act in context, annotate that rather than the reporting frame
 
 
