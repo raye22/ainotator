@@ -689,7 +689,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--xlsx", default="data/Yusra.xlsx", help="Input Excel file")
     parser.add_argument(
-        "--output_dir", default="annotations", help="Output dir name (auto-generated file names)"
+        "--output_dir",
+        default="annotations",
+        help="Output dir name (auto-generated file names)",
     )
     parser.add_argument(
         "--model", default="gpt-4o-2024-08-06", help="Model to use for annotation"
@@ -767,7 +769,7 @@ def main() -> None:
     # load system prompt
     system_prompt_path = Path("system_prompt.md")
     if not system_prompt_path.exists():
-        raise ValueError('System prompt not specified.')
+        raise ValueError("System prompt not specified.")
     else:
         system_prompt = system_prompt_path.read_text(encoding="utf-8")
 
