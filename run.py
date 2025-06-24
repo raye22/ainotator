@@ -141,18 +141,20 @@ REASON_END = "[/REASON]"
 
 
 BACKGROUND_YUSRA = (
-    "**Background Context**: A Reddit user (JuvieThrowaw) shares that as a teenager they "
-    "fatally shot their mother's abusive boyfriend after he harmed their sister, "
-    "served juvenile time, and now struggles with whether to disclose this past "
-    "to new friends and partners."
+    "**Background Context**: A Reddit user (JuvieThrowaw) shares that as a teenager "
+    "they fatally shot their mother's abusive boyfriend after he harmed their sister, "
+    "served juvenile time, and now is getting his life back on track. The user answers "
+    "questions about how they feel about what happened, how it affected their "
+    "relationship with their mother, sister, and stepfather, and what they are doing "
+    "now."
 )
 
 BACKGROUND_SOYEON = (
-    "**Background Context**: A Reddit user (CallSign_Fjor) posts in r/gaming that their "
-    "friends lose interest in finishing Terraria and other games whenever the "
-    "user progresses farther, even though the user avoids using end-game gear "
-    "and shares resources. The post asks why some players feel 'invalidated' "
-    "by someone else's faster progression."
+    "**Background Context**: A Reddit user (CallSign_Fjor) posts in r/gaming that "
+    "their friends lost interest in finishing Terraria and other games with them "
+    "because the user had progressed farther, even though the user avoided using "
+    "end-game gear and shared resources. The post asks why some players feel "
+    "'invalidated' by someone else's faster progression."
 )
 
 
