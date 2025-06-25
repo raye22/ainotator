@@ -403,7 +403,7 @@ def _parse_annotation(text: str) -> Dict:
     if REASON_START in text and REASON_END in text:
         reason = text.split(REASON_START, 1)[1].split(REASON_END, 1)[0].strip()
 
-    # Always validate reasoning presence and quality
+    # always validate reasoning presence and quality
     if len(reason) < 20:  # Minimum meaningful reasoning length
         raise ValueError(
             f"reasoning too short or missing (got {len(reason)} chars, need ≥20)"
@@ -421,28 +421,22 @@ def _parse_annotation(text: str) -> Dict:
     if act not in ALLOWED_ACTS:
         raise ValueError(f"invalid act: {act}")
 
-    # 2) politeness (+ optional subtype)
+    # 2) politeness: preserve full form like "-P [Silencer]"
     raw_pol = str(anno.get("politeness", "") or "")
     raw_pol = raw_pol.replace("–", "-").replace("—", "-").strip()
 
-    meta_field = str(anno.get("meta", "") or "").strip()  # safe default ""
+    pol = raw_pol  # keep entire string
 
-    if raw_pol.lower() == "none":
-        pol, meta_from_pol = "", ""
-    else:
-        if "[" in raw_pol and "]" in raw_pol:
-            base, subtype = raw_pol.split("[", 1)
-            pol = base.strip()
-        else:
-            pol = raw_pol
-
-    if pol and pol not in ALLOWED_POLITENESS:
-        raise ValueError(f"invalid politeness: {pol}")
+    if pol:
+        base_pol = pol.split(" ", 1)[0] if " " in pol else pol
+        if base_pol not in ALLOWED_POLITENESS:
+            raise ValueError(f"invalid politeness: {pol}")
 
     # 3) meta tags
-    combined_meta = ", ".join(filter(None, [meta_field, meta_from_pol]))
+    meta_field = str(anno.get("meta", "") or "").strip()
+
     clean_meta: List[str] = []
-    for tag in [t.strip() for t in combined_meta.split(",") if t.strip()]:
+    for tag in [t.strip() for t in meta_field.split(",") if t.strip()]:
         if tag not in ALLOWED_META:
             logging.warning(f"unrecognized meta tag: {tag}")  # keep but warn
         else:
@@ -458,9 +452,7 @@ def _get_model_client(model: str):
         try:
             import openai
         except ImportError:
-            raise ImportError(
-                "OpenAI package required for GPT models. Install with: pip install openai"
-            )
+            raise ImportError("Install with: pip install openai")
 
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -474,9 +466,7 @@ def _get_model_client(model: str):
         try:
             import anthropic
         except ImportError:
-            raise ImportError(
-                "Anthropic package required for Claude models. Install with: pip install anthropic"
-            )
+            raise ImportError("Install with: pip install anthropic")
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
@@ -490,9 +480,7 @@ def _get_model_client(model: str):
         try:
             import google.generativeai as genai
         except ImportError:
-            raise ImportError(
-                "Google AI package required for Gemini models. Install with: pip install google-generativeai"
-            )
+            raise ImportError("Install with: pip install google-generativeai")
 
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
@@ -508,9 +496,7 @@ def _get_model_client(model: str):
             from transformers import AutoTokenizer
             from vllm import LLM, SamplingParams
         except ImportError:
-            raise ImportError(
-                "transformers and vllm packages required for Llama models. Install with: pip install transformers vllm"
-            )
+            raise ImportError("Install with: pip install transformers vllm")
 
         tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
         llm = LLM(model=model, dtype="bfloat16")
