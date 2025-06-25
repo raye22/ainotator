@@ -116,7 +116,7 @@ ALLOWED_ACTS: List[str] = [
     "Behave",
     "Claim",
     "Congratulate",
-    "Desire",
+    "Desire (Irrealis)",
     "Direct",
     "Elaborate",
     "Greet",
@@ -130,6 +130,7 @@ ALLOWED_ACTS: List[str] = [
     "Request",
     "Thank",
 ]
+
 ALLOWED_POLITENESS: List[str] = ["+P", "+N", "-P", "-N"]
 ALLOWED_META: List[str] = ["non-bona fide", "reported"]
 
