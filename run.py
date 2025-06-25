@@ -82,6 +82,8 @@ Creates a single comprehensive CSV file with:
 8. Usage examples
 Basic annotation:
     python run.py --xlsx data/Soyeon.xlsx --model gpt-4o-2024-08-06
+    python run.py --xlsx data/Soyeon.xlsx --model claude-sonnet-4-20250514
+    python run.py --xlsx data/Soyeon.xlsx --model gemini-2.5-pro-preview-06-05
 
 Resume previous run:
     python run.py --xlsx data/Yusra.xlsx --resume previous_output.csv
@@ -91,7 +93,7 @@ Debug mode (first 10 rows):
 """
 
 __author__ = "hw56@iu.edu"
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __license__ = "MIT"
 
 
@@ -558,11 +560,18 @@ def _annotate_row(
                 ts = resp.created
 
             elif client_type == "anthropic":
+                # fix: split system + messages
+                system_content = messages[0]["content"]
+                user_content = messages[1]["content"]
+
                 resp = client.messages.create(
                     model=model,
                     max_tokens=1024,
                     temperature=0.7,
-                    messages=messages,
+                    system=system_content,
+                    messages=[
+                        {"role": "user", "content": user_content}
+                    ],
                 )
                 content = resp.content[0].text
                 ts = time.time()
