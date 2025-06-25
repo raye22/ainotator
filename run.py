@@ -765,13 +765,11 @@ def main() -> None:
     # build dynamic global context
     if "Category" in df.columns:  # Soyeon layout
         thread_summary = BACKGROUND_SOYEON
-        # Find original posts
         original_posts = (
             df[df["Category"] == "Original post"]["Message"].dropna().tolist()
         )
     else:  # Yusra layout
         thread_summary = BACKGROUND_YUSRA
-        # find first posts
         original_posts = df[df["Msg#"] == 1]["Message"].dropna().tolist()
 
     dynamic_global_context = "\n\n".join(
@@ -821,11 +819,21 @@ def main() -> None:
             all_raw_records.extend(raws)
             logging.info(f"Annotated row {idx}: {anno['act']}")
 
+            # debug printout: print last generation
+            if args.debug:
+                print("\n--- Generation for row", idx, "---")
+                try:
+                    user_prompt = json.loads(raws[-1]["prompt"])[1]["content"]
+                except Exception:
+                    user_prompt = "[[ Could not parse user prompt ]]"
+                print("Prompt:\n", user_prompt)
+                print("\nResponse:\n", raws[-1]["response"])
+                print("--- end of generation ---\n")
+
         except RuntimeError as exc:
             flag = "__FLAGGED__" if str(exc) == "policy_flagged" else "__FAILED__"
             logging.error(f"Row {idx}: {exc}")
 
-            # create failed annotation
             failed_anno = {
                 "row_idx": idx,
                 "act": flag,
