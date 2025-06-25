@@ -537,54 +537,71 @@ def _annotate_row(
             model.split("-")[0] if "-" in model else model,
         )
 
-        # inference based on client type
         try:
             if client_type == "openai":
-                if model.startswith("o3"):
-                    resp = client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        temperature=1.0,
-                        top_p=1.0,
-                        seed=seed,
-                    )
-                else:
-                    resp = client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        temperature=0.7,
-                        top_p=0.95,
-                        seed=seed,
-                    )
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=0.6,
+                    top_p=0.9,
+                    max_tokens=1024,
+                    seed=seed,
+                )
                 content = resp.choices[0].message.content
                 ts = resp.created
 
+                if not content or len(content.strip()) == 0:
+                    raise RuntimeError(
+                        f"OpenAI: empty output for row {row_idx} seed {seed} — retrying"
+                    )
+
             elif client_type == "anthropic":
-                # fix: split system + messages
                 system_content = messages[0]["content"]
                 user_content = messages[1]["content"]
 
                 resp = client.messages.create(
                     model=model,
                     max_tokens=1024,
-                    temperature=0.7,
+                    temperature=0.6,
                     system=system_content,
-                    messages=[
-                        {"role": "user", "content": user_content}
-                    ],
+                    messages=[{"role": "user", "content": user_content}],
                 )
                 content = resp.content[0].text
                 ts = time.time()
 
+                if not content or len(content.strip()) == 0:
+                    raise RuntimeError(
+                        f"Claude: empty output for row {row_idx} seed {seed} — retrying"
+                    )
+
             elif client_type == "gemini":
-                # Convert to Gemini format
                 prompt_text = f"{messages[0]['content']}\n\n{messages[1]['content']}"
                 resp = client.generate_content(
                     prompt_text,
-                    generation_config={"temperature": 0.7, "max_output_tokens": 1024},
+                    generation_config={
+                        "temperature": 0.6,
+                        "top_p": 0.9,
+                        "max_output_tokens": 1024,
+                    },
                 )
+
+                if not resp.candidates:
+                    raise RuntimeError(
+                        f"Gemini: no candidates returned for row {row_idx} seed {seed}"
+                    )
+
+                finish_reason = getattr(resp.candidates[0], "finish_reason", None)
+                if finish_reason != "STOP":
+                    raise RuntimeError(
+                        f"Gemini: finish_reason={finish_reason} for row {row_idx} seed {seed} — retrying"
+                    )
                 content = resp.text
                 ts = time.time()
+
+                if not content or len(content.strip()) == 0:
+                    raise RuntimeError(
+                        f"Gemini: empty output for row {row_idx} seed {seed} — retrying"
+                    )
 
             elif client_type == "llama":
                 llm, tokenizer = client
@@ -596,13 +613,19 @@ def _annotate_row(
                 out = llm.generate(
                     [prompt],
                     sampling_params=SamplingParams(
-                        temperature=0.7,
-                        top_p=0.95,
+                        temperature=0.6,
+                        top_p=0.9,
+                        max_tokens=1024,
                         seed=seed,
                     ),
                 )[0].outputs[0]
                 content = out.text
                 ts = time.time()
+
+                if not content or len(content.strip()) == 0:
+                    raise RuntimeError(
+                        f"LLaMA: empty output for row {row_idx} seed {seed} — retrying"
+                    )
 
         except Exception as e:
             if "policy" in str(e).lower() or "safety" in str(e).lower():
