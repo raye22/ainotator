@@ -544,7 +544,7 @@ def _annotate_row(
                     messages=messages,
                     temperature=0.6,
                     top_p=0.9,
-                    max_tokens=1024,
+                    max_tokens=10240,
                     seed=seed,
                 )
                 content = resp.choices[0].message.content
@@ -561,7 +561,7 @@ def _annotate_row(
 
                 resp = client.messages.create(
                     model=model,
-                    max_tokens=1024,
+                    max_tokens=10240,
                     temperature=0.6,
                     system=system_content,
                     messages=[{"role": "user", "content": user_content}],
