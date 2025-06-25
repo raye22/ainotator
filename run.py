@@ -508,6 +508,15 @@ def _get_model_client(model: str):
         raise ValueError(f"Unsupported model: {model}")
 
 
+def extract_gemini_text(resp) -> str:
+    """Return first textual Part from a Gemini response or ''."""
+    for cand in getattr(resp, "candidates", []) or []:
+        for part in cand.content.parts:
+            if getattr(part, "text", ""):
+                return part.text.strip()
+    return ""
+
+
 def _annotate_row(
     row_idx: int,
     df: pd.DataFrame,
@@ -576,6 +585,7 @@ def _annotate_row(
 
             elif client_type == "gemini":
                 prompt_text = f"{messages[0]['content']}\n\n{messages[1]['content']}"
+
                 resp = client.generate_content(
                     prompt_text,
                     generation_config={
@@ -585,23 +595,15 @@ def _annotate_row(
                     },
                 )
 
-                if not resp.candidates:
+                reply_text = extract_gemini_text(resp)
+
+                if not reply_text:
                     raise RuntimeError(
-                        f"Gemini: no candidates returned for row {row_idx} seed {seed}"
+                        f"Gemini: empty response for row {row_idx} seed {seed} — retrying"
                     )
 
-                finish_reason = getattr(resp.candidates[0], "finish_reason", None)
-                if finish_reason != "STOP":
-                    raise RuntimeError(
-                        f"Gemini: finish_reason={finish_reason} for row {row_idx} seed {seed} — retrying"
-                    )
-                content = resp.text
+                content = reply_text
                 ts = time.time()
-
-                if not content or len(content.strip()) == 0:
-                    raise RuntimeError(
-                        f"Gemini: empty output for row {row_idx} seed {seed} — retrying"
-                    )
 
             elif client_type == "llama":
                 llm, tokenizer = client
