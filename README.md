@@ -7,7 +7,7 @@ For each utterance in context, we assign:
 
 - **Communicative Act Labels** (e.g., Accept, Request, Reject)
 - **Politeness Tags** following Brown & Levinson (1987), Herring (1994) and Culpeper (2011)
-- **Meta-Acts** (e.g., [non-bona fide], [reported])
+- **Meta-Acts** (e.g., non-bona fide, reported)
 
 Annotations are generated through structured prompting with **mandatory reasoning** and saved in a reproducible, debuggable format. The tool supports:
 
@@ -47,7 +47,7 @@ The model follows the **CMC Act Taxonomy** (Herring, Das, and Penumarthy 2005; r
 | **Behave**     | Perform a virtual action | "*dances with joy"; "*sips tea" |
 | **Claim**      | Make subjective assertion; unverifiable in principle | "I do not understand the mentality of people who..." |
 | **Congratulate** | Celebrate/praise accomplishment; encourage; validate | "Well done!"; "You've got this!" |
-| **Desire**     | Want, hope, wish; promise, predict; hypothetical | "I wish they'd just play the game together." |
+| **Desire (Irrealis)** | Want, hope, wish; promise, predict; hypothetical | "I wish they'd just play the game together." |
 | **Direct**     | Command, demand; prohibit; permit; advise | "You should try something else." |
 | **Elaborate**  | Explain or paraphrase previous utterance | "This isn't the first time it happened..." |
 | **Greet**      | Greeting, leave-taking; formulaic well-being inquiries | "Hello"; "How are you?" |
@@ -78,31 +78,31 @@ Based on **Brown & Levinson (1987)** Politeness Theory: Positive politeness aims
 
 | Tag            | Description                                         |
 |----------------|-----------------------------------------------------|
-| **[non-bona fide]** | Sarcasm, irony, jokes, rhetorical questions     |
-| **[reported]**      | Quoting or paraphrasing others' speech/thoughts |
+| **non-bona fide** | Sarcasm, irony, jokes, rhetorical questions     |
+| **reported**      | Quoting or paraphrasing others' speech/thoughts |
 
 ---
 
 ## 🚀 Usage
 
 ```bash
-# Aannotate with default settings (GPT-4o with reasoning)
-python annotate.py --xlsx your_data.xlsx
+# Annotate with default settings (GPT-4o with reasoning)
+python run.py --xlsx your_data.xlsx
 
 # use different models
-python annotate.py --xlsx your_data.xlsx --model claude-sonnet-4-20250514
-python annotate.py --xlsx your_data.xlsx --model gemini-2.5-pro-preview-06-05
+python run.py --xlsx your_data.xlsx --model claude-sonnet-4-20250514
+python run.py --xlsx your_data.xlsx --model gemini-2.5-pro-preview-06-05
 
 # resume from previous run
-python annotate.py --xlsx your_data.xlsx --resume previous_output.csv
+python run.py --xlsx your_data.xlsx --resume previous_output.csv
 
 # debug mode (first 10 rows only)
-python annotate.py --xlsx your_data.xlsx --debug
+python run.py --xlsx your_data.xlsx --debug
 
 ```
 
 ### Supported Models
-- **OpenAI**: `gpt-4o-2024-08-06`
+- **OpenAI**: `gpt-4o-2024-08-06`, `o3-2025-04-16`
 - **Anthropic**: `claude-sonnet-4-20250514`
 - **Google**: `gemini-2.5-pro-preview-06-05`
 - **Llama**: `meta-llama/Llama-3.1-8B-Instruct`
@@ -206,7 +206,21 @@ pip install transformers vllm
 
 ## 📜 Version History
 
-- **v0.4.0** *(Current)*
+<details>
+<summary>Click to expand version history</summary>
+
+- **v0.5.0** *(Current)*
+  - **Updated script name**: Changed from `annotate.py` to `run.py`
+  - **Enhanced model support**: Added o3-* models for OpenAI
+  - **Improved meta-act handling**: Removed brackets from meta-act tags in output
+  - **Always-on reasoning**: Every annotation includes step-by-step analysis
+  - **Simplified interface**: Removed complex flags, reasoning is always required
+  - **Comprehensive output**: Single CSV with all data, annotations, and metadata
+  - **Multi-model support**: OpenAI, Anthropic, Google, and Llama (local)
+  - **Data preservation**: Original files never modified
+  - **Enhanced validation**: Stricter reasoning and format requirements
+
+- **v0.4.0**  
   - **Always-on reasoning**: Every annotation includes step-by-step analysis
   - **Simplified interface**: Removed complex flags, reasoning is always required
   - **Comprehensive output**: Single CSV with all data, annotations, and metadata
@@ -228,6 +242,8 @@ pip install transformers vllm
   - Initial prototype with communicative act classification
   - Basic politeness/impoliteness tagging and meta-acts
   - CoT reasoning toggle and resumable run logic
+
+</details>
 
 ## 📄 License
 
