@@ -750,9 +750,19 @@ def main() -> None:
         logging.info(f"Resuming from {args.resume}")
         resume_df = pd.read_csv(args.resume)
         for idx, row in resume_df.iterrows():
-            if row.get("annotation_act") and str(
+            # check for complete annotation: must have act, reasoning, and raw data
+            has_act = row.get("annotation_act") and str(
                 row.get("annotation_act")
-            ).strip() not in ("", "__FAILED__", "__FLAGGED__"):
+            ).strip() not in ("", "__FAILED__", "__FLAGGED__")
+            has_reasoning = (
+                row.get("annotation_reasoning")
+                and str(row.get("annotation_reasoning")).strip()
+            )
+            has_raw_data = (
+                row.get("raw_response") and str(row.get("raw_response")).strip()
+            )
+
+            if has_act and has_reasoning and has_raw_data:
                 annotations.append(
                     {
                         "row_idx": idx,
@@ -763,7 +773,36 @@ def main() -> None:
                         "seed": row.get("annotation_seed", ""),
                     }
                 )
+                # also restore the raw records for complete data integrity
+                if row.get("raw_prompt") and row.get("raw_response"):
+                    all_raw_records.append(
+                        {
+                            "row_idx": idx,
+                            "seed": row.get("annotation_seed", ""),
+                            "prompt": row["raw_prompt"],
+                            "response": row["raw_response"],
+                            "timestamp": row.get("annotation_timestamp", time.time()),
+                        }
+                    )
                 completed_rows.add(idx)
+            elif str(row.get("annotation_act")).strip() in (
+                "__FAILED__",
+                "__FLAGGED__",
+            ):
+                # also skip previously failed/flagged rows
+                annotations.append(
+                    {
+                        "row_idx": idx,
+                        "act": row["annotation_act"],
+                        "politeness": "",
+                        "meta": "",
+                        "reason": "",
+                        "seed": row.get("annotation_seed", ""),
+                    }
+                )
+                completed_rows.add(idx)
+
+        logging.info(f"Resumed {len(completed_rows)} previously completed rows")
 
     # build dynamic global context
     if "Category" in df.columns:  # Soyeon layout
