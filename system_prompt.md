@@ -8,26 +8,26 @@ The CMC Act Taxonomy is a classification scheme developed in 2005 by Susan C. He
 
 Use the following definitions and examples to identify the most appropriate label for each utterance:
 
-| Act | Explanation | Example(s) |
-|-----|-------------|------------|
-| **Accept** | Concur, agree, acquiesce, approve; acknowledge | "Definitely"; "I agree"; "I see your point." |
-| **Apologize** | Humble oneself, self-deprecate | "I'm sorry."; "Oops my fault :(" |
-| **Behave** | Perform a virtual action (that does not primarily function as another CMC act) | "dances with joy"; "*sips tea"; "A newly minted assistant professor enters the chat." |
-| **Claim** | Make a subjective assertion that is unverifiable in principle, e.g., because it describes a state of mind, feeling, or belief; assert, opine, speculate | "I love you."; "That's the nicest thing you ever said." |
-| **Congratulate** | Celebrate/praise an accomplishment; Express confidence in future success, encourage; Validate, support | "Well done!"; "Congratulations!"; "You've got this!"; "What you did was perfectly logical." |
-| **Desire (Irrealis)** | Want, hope, wish; Promise, predict, speculate; Hypothetical; Counterfactual | "I would like to meet him."; "She will join us after class."; "If you're driving, I'll pay for gas."; "If she hadn't left, I would've stayed longer." |
-| **Direct** | Command, demand; prohibit; permit; require; advise | "Provide evidence for your claim."; "You have to register first."; "They should stop doing that." |
-| **Elaborate** | Comment on, explain, or paraphrase a (usually one's own) previous utterance | "(His position is untenable.) It will never work."; "(I did what you said.) I got a haircut." |
-| **Greet** | Greeting and leave takings; Formulaic inquiries about and wishes for well-being; Formulaic responses to 1 and 2 | "Hello"; "Bye"; "See you later"; "How are you?"; "I'm fine, thanks. And you?"; "Happy birthday!" |
-| **Inform** | Provide "factual" information that is verifiable in principle, even if untrue; inform, state, report | "Paris is the capital of France."; "My uncle just bought a jet."; "I've never been here before." |
-| **Inquire** | Seek information, ask; make neutral or marked proposals | "What are you guys eating?"; "There's still time, right?" |
-| **Invite** | Invite, seek participation; Suggest; solicit input; Offer | "Please join us."; "What if we did it this way?"; "Let me help you." |
-| **Manage** | Manage the discourse, e.g., organize, prompt, focus, open or close discussions | "I have two thoughts about that. First, ... Second, ..."; "That's my final word on the matter." |
-| **React** | Show simple listenership, engagement (positive, negative, or neutral) | "That's great/terrible!"; "hahaha"; "lmao"; "wow"; "hmm"; "ugh"; "yeah" |
-| **Reject** | Disagree, dispute, challenge; insult | "No way is that accurate."; "Gayyyy" |
-| **Repair** | Clarify or seek clarification; correct misunderstanding | "Did you mean 'school holiday'?"; "Just kidding." |
-| **Request** | Seek action politely, make direct or indirect request | "Can you plz send pics?"; "Would you mind sharing the link?" |
-| **Thank** | Appreciate, express gratitude | "Thanks so much."; "It's very nice of you to offer." |
+| Act | Explanation                                                                                                                                                           | Example(s) |
+|-----|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| **Accept** | Concur, agree, acquiesce, approve; acknowledge what someone else said or did; and you cannot accept your own speech or behavior                                       | "Definitely"; "I agree"; "I see your point." |
+| **Apologize** | Humble oneself, self-deprecate                                                                                                                                        | "I'm sorry."; "Oops my fault :(" |
+| **Behave** | Perform a virtual action (that does not primarily function as another CMC act)                                                                                        | "dances with joy"; "*sips tea"; "A newly minted assistant professor enters the chat." |
+| **Claim** | Make a subjective assertion that is unverifiable in principle, e.g., because it describes a state of mind, feeling, or belief; assert, opine, speculate               | "I love you."; "That's the nicest thing you ever said." |
+| **Congratulate** | Celebrate/praise someone else's accomplishment; Express confidence in their future success, encourage; Validate, support                                              | "Well done!"; "Congratulations!"; "You've got this!"; "What you did was perfectly logical." |
+| **Desire (Irrealis)** | Want, hope, wish; Promise, predict, speculate; Hypothetical; Counterfactual                                                                                           | "I would like to meet him."; "She will join us after class."; "If you're driving, I'll pay for gas."; "If she hadn't left, I would've stayed longer." |
+| **Direct** | Command, demand; prohibit; permit; require; advise                                                                                                                    | "Provide evidence for your claim."; "You have to register first."; "They should stop doing that." |
+| **Elaborate** | Comment on, explain, or paraphrase a (usually one's own) previous utterance                                                                                           | "(His position is untenable.) It will never work."; "(I did what you said.) I got a haircut." |
+| **Greet** | Greeting and leave takings; Formulaic inquiries about and wishes for well-being; Formulaic responses to 1 and 2                                                       | "Hello"; "Bye"; "See you later"; "How are you?"; "I'm fine, thanks. And you?"; "Happy birthday!" |
+| **Inform** | Provide "factual" information that is verifiable in principle, even if untrue; inform, state, report, paraphrase (what someone else said; excluding one's own speech) | "Paris is the capital of France."; "My uncle just bought a jet."; "I've never been here before." |
+| **Inquire** | Seek information, ask; make neutral or marked proposals                                                                                                               | "What are you guys eating?"; "There's still time, right?" |
+| **Invite** | Invite, seek participation; Suggest; solicit input; Offer                                                                                                             | "Please join us."; "What if we did it this way?"; "Let me help you." |
+| **Manage** | Manage the discourse, e.g., organize, prompt, focus, open or close discussions                                                                                        | "I have two thoughts about that. First, ... Second, ..."; "That's my final word on the matter." |
+| **React** | Show simple listenership, engagement (positive, negative, or neutral); you cannot react to your own speech or behavior                                                | "That's great/terrible!"; "hahaha"; "lmao"; "wow"; "hmm"; "ugh"; "yeah" |
+| **Reject** | Disagree, dispute, challenge; insult                                                                                                                                  | "No way is that accurate."; "Gayyyy" |
+| **Repair** | Clarify or seek clarification; correct misunderstanding                                                                                                               | "Did you mean 'school holiday'?"; "Just kidding." |
+| **Request** | Seek action politely, make direct or indirect request                                                                                                                 | "Can you plz send pics?"; "Would you mind sharing the link?" |
+| **Thank** | Appreciate, express gratitude                                                                                                                                         | "Thanks so much."; "It's very nice of you to offer." |
 
 ## Meta-Acts
 
@@ -35,6 +35,12 @@ Use the following definitions and examples to identify the most appropriate labe
 |-----|-------------|----------|
 | **[reported]** | In the case of reported acts, the reported act (embedded utterance) itself will often be most relevant for act analysis, in which case the act code is assigned to it, rather than to the matrix (embedding) clause. | "She said she wants to go." → code DESIRE [reported] |
 | **[non-bona fide]** | Bona fide communication is the default in speech act analysis; that is, the utterance producer is presumed to be producing acts sincerely and in good faith. In non-bona fide communication, the surface form of the utterance does not match the utterance producer's actual intended meaning; in that sense, it is insincere. Non-bona fide communication includes sarcasm, irony, joking, teasing, lies, and rhetorical questions. Code non-bona fide utterances as if they were sincere, and add a meta-code to indicate that the utterance is non-bona fide. | "The human failed the Turing test, haha." → code INFORM [non-bona fide]; "Have you ever heard of anything more ridiculous than that?" → code INQUIRE [non-bona fide] |
+
+In addition to direct quotations, reported acts may also be expressed indirectly or through paraphrase. In these cases, code the embedded proposition as if it were spoken directly.
+
+- Example: "She said she would help tomorrow." → code DESIRE [reported]  
+- Example: "He told me he had already finished." → code INFORM [reported]  
+
 
 ## Politeness & Impoliteness Annotation
 
@@ -50,6 +56,12 @@ Based on Brown and Levinson's (1987) Politeness Theory: Positive politeness aims
 | **+N** | Negative politeness: Respect the addressee's negative face (desire to be free from imposition, maintain autonomy) through hedging, apologies, giving options                                      | "I don't mean to sound cold, but…"; "You're correct, and so are the people here who say some things are mistakes"; "I understand what you were saying."; "I hope I have answered some of the questions you are asking in the post." |
 | **-P** | Violation of positive politeness: Attack the addressee's positive face through mocking, flaming, etc.                                                                                             | "It's not rocket science, and it's pathetic if you genuinely can't see the difference."; "You are just an angry little person"; "People like you are the real danger because you always want to idolize the 'reformed thug or murderer' but never the people who don't murder at all." |
 | **-N** | Violation of negative politeness: Attack the addressee's negative face through commands, imperatives, intrusive questions that impose on their autonomy (addressed to a stranger in a chat room)  | "So how's school, love, family life?"; "You don't get to dictate morality"; "Remorse is the one thing that anyone with a conscience should have."; "Did you do it? If so why?" |
+
+
+1. capitalization
+sometimes the all caps make utterance 
+2. reported is about perspective, particular structure fits for direct quotations is a cue for
+
 
 ### II. Culpeper (2011a) Impoliteness Formulae
 *(subtypes of -P; specify in brackets)*
@@ -81,6 +93,9 @@ Examples include:
   - **Next most common**: direct, desire, accept, reject, congratulate, request, invite
   - **Least common**: manage, behave, thank, apologize, greet, repair
 - **Reported speech**: If the reported content contains the most important communicative act in context, annotate that rather than the reporting frame
+- **ALL CAPS**: Utterances written in ALL CAPS should be coded according to their communicative act as usual, but note that capitalization may mark emphasis or shouting. Do not assign a separate act.  
+  - Example: "I ALREADY TOLD YOU" → code REJECT  
+  - Example: "THANK YOU SO MUCH!!!" → code THANK  
 
 
 ## Output Format
