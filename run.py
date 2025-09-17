@@ -98,6 +98,7 @@ __license__ = "MIT"
 
 
 import argparse
+from datetime import datetime
 import json
 import logging
 import os
@@ -237,13 +238,22 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
     msg_text = str(row["Message"]).strip()
 
     # start narrative
-    narrative = f'**Local Context**: We will be annotating Utterance #{msg_id} from {user_id}:\n"{msg_text}"\n'
+    narrative = f'**Local Context**: We will be annotating Utterance #{row_idx} from {user_id}:\n"{msg_text}"\n'
 
+    mask = df["Msg#"].eq(msg_id)
+    rows = df.loc[mask]
+    msgs = rows["Message"].astype(str).fillna("").map(str.strip)
+    # Concatenate all utterances into a single message (space-separated)
+    full_message = " ".join(m for m in msgs if m)
+    narrative += (
+    f"The full message is:\n{full_message}\n\n"
+    f'You are asked only to annotate the utterance "{msg_text}".'
+)
     if pd.notna(reply_to) and reply_to != "N/A":
         referred_df = df[(df["User ID"] == reply_to) & (df.index < row_idx)]
         if not referred_df.empty:
             narrative += (
-                f'\nUtterance #{msg_id} is a reply to user "{reply_to}". '
+                f'\nUtterance #{row_idx} is a reply to user "{reply_to}". '
                 f"The following earlier messages by {reply_to} may help contextualize the reply:"
             )
             for _, r in referred_df.iterrows():
@@ -286,6 +296,15 @@ def _format_local_context_narrative_yusra(row_idx: int, df: pd.DataFrame) -> str
     # start narrative
     narrative = f'**Local Context**: We will be annotating Utterance #{msg_id} (#{utterance_num}) from {user_id}:\n"{msg_text}"\n'
 
+    mask = df["Msg#"].eq(msg_id)
+    rows = df.loc[mask]
+    msgs = rows["Message"].astype(str).fillna("").map(str.strip)
+    # Concatenate all utterances into a single message (space-separated)
+    full_message = " ".join(m for m in msgs if m)
+    narrative += (
+    f"The full message is:\n{full_message}\n\n"
+    f'You are asked only to annotate the utterance "{msg_text}".'
+)
     # previous message context
     if row_idx > 0:
         prev_row = df.iloc[row_idx - 1]
@@ -456,8 +475,12 @@ def _get_model_client(model: str):
             import openai
         except ImportError:
             raise ImportError("Install with: pip install openai")
-
+        # --- add near the top of run.py, after stdlib imports ---
+        from dotenv import load_dotenv, find_dotenv
+        load_dotenv(find_dotenv())  # loads .env from the repo (searches upward)
+        # --- end addition ---
         api_key = os.getenv("OPENAI_API_KEY")
+        print('api_key:', api_key)
         if not api_key:
             raise ValueError(
                 "OPENAI_API_KEY environment variable required for OpenAI models"
@@ -737,8 +760,9 @@ def main() -> None:
     # determine output filename
     input_stem = Path(args.xlsx).stem
     model_name = args.model.replace("/", "_").replace("-", "_")
+    date = datetime.now().strftime("%m-%d_%H-%M-%S")
     os.makedirs(args.output_dir, exist_ok=True)
-    output_path = f"{args.output_dir}/{input_stem}_annotated_{model_name}.csv"
+    output_path = f"{args.output_dir}/{input_stem}_annotated_{model_name}_{date}.csv"
 
     # initialize tracking
     annotations = []
@@ -834,8 +858,8 @@ def main() -> None:
     # determine rows to annotate
     todo_idx = [idx for idx in df.index if idx not in completed_rows]
     if args.debug:
-        todo_idx = todo_idx[:10]
-        logging.info("Debug mode: first 10 only")
+        todo_idx = todo_idx[:5]
+        logging.info("Debug mode: first 5 only")
         logging.info(f"Debug output will be saved to: {output_path}")
 
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
