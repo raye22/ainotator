@@ -247,22 +247,62 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
     msgs = rows["Message"].astype(str).fillna("").map(str.strip)
     if len(msgs) > 1:
         # Concatenate all utterances into a single message (space-separated)
-        full_message = " ".join(m for m in msgs if m)
-        narrative += (
-            f"The full message is:\n{full_message}\n\n"
-            f'You are asked only to annotate the utterance "{msg_text}".'
-        )
+        if category == "Original post":
+            narrative += (
+                "This is part of the thread message. "
+            )
+        else:
+            full_message = " ".join(m for m in msgs if m)
+            narrative += (
+                f"This utterance is part of the full message:\n{full_message}\n\n"
+                f'You are asked only to annotate the utterance "{msg_text}".'
+            )
     if pd.notna(reply_to) and reply_to != "N/A":
         referred_df = df[(df["User ID"] == reply_to) & (df.index < row_idx)]
         if not referred_df.empty:
-            narrative += (
-                f'\nUtterance #{row_idx} is a reply to user "{reply_to}". '
-                f"The following earlier messages by {reply_to} may help contextualize the reply:"
-            )
-            for _, r in referred_df.iterrows():
+            if category == "Comment":
                 narrative += (
-                    f'\n- Utterance #{r["Msg#"]}: "{str(r["Message"]).strip()}"'
+                    f'\nUtterance #{row_idx} is a comment on the original post by "{reply_to}". '
+                    f"Read the thread starter message for the context."
                 )
+            else:
+                narrative += (
+                    f'\nUtterance #{row_idx} is a reply to user "{reply_to}". '
+                    f"The following earlier messages by {reply_to} may help contextualize the reply:"
+                )
+                for _, r in referred_df.iterrows():
+                    narrative += (
+                        f'\n- Utterance #{r["Msg#"]}: "{str(r["Message"]).strip()}"'
+                    )
+
+    # find the first earlier message from the same user (different message ID)
+    same_user_earlier_mask = (df["User ID"] == user_id) & (df.index < row_idx)
+    if same_user_earlier_mask.any():
+        # get all earlier messages from same user and find the most recent different msg_id
+        earlier_msgs = df[same_user_earlier_mask]
+        different_msg_ids = earlier_msgs[earlier_msgs["Msg#"] != msg_id]["Msg#"]
+        # first_earlier_msg_id=earlier_msgs["Msg#"].iloc[-1]
+        if not different_msg_ids.empty:
+            first_earlier_msg_id = different_msg_ids.iloc[-1]  # most recent different msg id
+            # get all utterances with that msg id and combine them
+            same_msg_utterances = df[df["Msg#"] == first_earlier_msg_id]["Message"].astype(str).str.strip()
+            combined_earlier_msg = " ".join(same_msg_utterances)
+            narrative += f"\n\nPrevious message from {user_id} in this thread:"
+            narrative += f'\n- Message #{first_earlier_msg_id}: "{combined_earlier_msg}"'
+
+    # find the first later message from the same user (different message ID)
+    same_user_later_mask = (df["User ID"] == user_id) & (df.index > row_idx) & (df['Reply to_ID'] == reply_to)
+    if same_user_later_mask.any():
+        # get all later messages from same user and find the first different msg_id
+        later_msgs = df[same_user_later_mask]
+        different_msg_ids = later_msgs[later_msgs["Msg#"] != msg_id]["Msg#"]
+        if not different_msg_ids.empty:
+            first_later_msg_id = different_msg_ids.iloc[0]  # first different msg id
+            # get all utterances with that msg id and combine them
+            same_msg_utterances = df[df["Msg#"] == first_later_msg_id]["Message"].astype(str).str.strip()
+            combined_later_msg = " ".join(same_msg_utterances)
+            narrative += f"\n\nNext message from {user_id} in this thread:"
+            narrative += f'\n- Message #{first_later_msg_id}: "{combined_later_msg}"'
 
     # find first replies to this utterance from other users
     later_replies = df[
