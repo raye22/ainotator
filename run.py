@@ -135,6 +135,7 @@ ALLOWED_ACTS: List[str] = [
 
 ALLOWED_POLITENESS: List[str] = ["+P", "+N", "-P", "-N"]
 ALLOWED_META: List[str] = ["non-bona fide", "reported"]
+ALLOWED_META_NON_BONA_FIDE: List[str] = ['True','False']
 
 START_TAG = "[ANNOT]"
 END_TAG = "[/ANNOT]"
@@ -244,12 +245,13 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
     mask = df["Msg#"].eq(msg_id)
     rows = df.loc[mask]
     msgs = rows["Message"].astype(str).fillna("").map(str.strip)
-    # Concatenate all utterances into a single message (space-separated)
-    full_message = " ".join(m for m in msgs if m)
-    narrative += (
-    f"The full message is:\n{full_message}\n\n"
-    f'You are asked only to annotate the utterance "{msg_text}".'
-)
+    if len(msgs) > 1:
+        # Concatenate all utterances into a single message (space-separated)
+        full_message = " ".join(m for m in msgs if m)
+        narrative += (
+            f"The full message is:\n{full_message}\n\n"
+            f'You are asked only to annotate the utterance "{msg_text}".'
+        )
     if pd.notna(reply_to) and reply_to != "N/A":
         referred_df = df[(df["User ID"] == reply_to) & (df.index < row_idx)]
         if not referred_df.empty:
@@ -389,11 +391,12 @@ def _build_messages(
     reasoning_block = (
         "\n**Reasoning**: Provide step-by-step analysis inside [REASON]…[/REASON] before your final answer. "
         "Follow the annotation procedure: "
-        "(1) Read the target utterance in context, "
-        "(2) Identify the speaker's primary communicative intent, "
-        "(3) Consider 2-3 most plausible act options, "
-        "(4) Evaluate politeness/impoliteness if clearly expressed, "
-        "(5) Check for meta-acts (reported speech, sarcasm, etc.)."
+        "1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages "
+        "2. **Pay close attention to the speaker's intent in context, not only the surface form of the message** - what is the primary communicative goal? "
+        "3. **Consider 2-3 most plausible options** and then select the primary communicative function, politeness (if strong enough), and meta-act (and subtype) when appropriate "
+        "4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions) "
+        "5. **Check for meta-acts** - is this reported perspective, or non-bona fide speech such as sarcasm, irony, or a rhetorical question? "
+        "6. **When reasoning is requested**, think aloud step-by-step inside [REASON]…[/REASON] following steps 1-5"
     )
 
     if model_tag == "o3":
@@ -406,7 +409,7 @@ def _build_messages(
     format_block = (
         f"\n**Output Format**: First provide your step-by-step reasoning inside {REASON_START}…{REASON_END}, "
         f"then return the annotation as one JSON object wrapped EXACTLY like:\n"
-        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","meta":"< META >"}}{END_TAG}'
+        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","meta":"< META >","non-bona fide":"<NON_BONA_FIDE>"}}{END_TAG}'
     )
 
     return [
@@ -428,10 +431,10 @@ def _parse_annotation(text: str) -> Dict:
 
     # always validate reasoning presence and quality
     if len(reason) < 20:  # Minimum meaningful reasoning length
+        print('text:', text)
         raise ValueError(
             f"reasoning too short or missing (got {len(reason)} chars, need ≥20)"
         )
-
     # ANNOT block (required)
     if START_TAG not in text or END_TAG not in text:
         raise ValueError("annotation wrapper tags not found")
@@ -455,7 +458,7 @@ def _parse_annotation(text: str) -> Dict:
         if base_pol not in ALLOWED_POLITENESS:
             raise ValueError(f"invalid politeness: {pol}")
 
-    # 3) meta tags
+    # 3) meta tags_reported
     meta_field = str(anno.get("meta", "") or "").strip()
 
     clean_meta: List[str] = []
@@ -466,7 +469,18 @@ def _parse_annotation(text: str) -> Dict:
             clean_meta.append(tag)
     meta = ", ".join(clean_meta)
 
-    return {"act": act, "politeness": pol, "meta": meta, "reason": reason}
+        # 4) meta tags_non-bona fide
+    meta_field_non_bona_fide = str(anno.get("non-bona fide", "") or "").strip()
+
+    clean_meta_non_bona_fide: List[str] = []
+    for tag in [t.strip() for t in meta_field_non_bona_fide.split(",") if t.strip()]:
+        if tag not in ALLOWED_META_NON_BONA_FIDE:
+            logging.warning(f"unrecognized meta tag: {tag}")  # keep but warn
+        else:
+            clean_meta_non_bona_fide.append(tag)
+    meta_non_bona_fide = ", ".join(clean_meta_non_bona_fide)
+
+    return {"act": act, "politeness": pol, "meta": meta, "non-bona fide": meta_non_bona_fide,"reason": reason,}
 
 
 def _get_model_client(model: str):
@@ -702,6 +716,7 @@ def _create_output_dataframe(
     output_df["annotation_act"] = ""
     output_df["annotation_politeness"] = ""
     output_df["annotation_meta"] = ""
+    output_df['annotation_NBF'] = ""
     output_df["annotation_reasoning"] = ""
     output_df["raw_prompt"] = ""
     output_df["raw_response"] = ""
@@ -714,6 +729,7 @@ def _create_output_dataframe(
         output_df.at[row_idx, "annotation_act"] = anno.get("act", "")
         output_df.at[row_idx, "annotation_politeness"] = anno.get("politeness", "")
         output_df.at[row_idx, "annotation_meta"] = anno.get("meta", "")
+        output_df.at[row_idx, "annotation_NBF"] = anno.get("non-bona fide", "")
         output_df.at[row_idx, "annotation_reasoning"] = anno.get("reason", "")
         output_df.at[row_idx, "annotation_seed"] = anno.get("seed", "")
 
@@ -853,7 +869,7 @@ def main() -> None:
     client, client_type = _get_model_client(args.model)
 
     # load system prompt
-    system_prompt_path = Path("system_prompt_0910.md")
+    system_prompt_path = Path("system_prompt_final.md")
     if not system_prompt_path.exists():
         raise ValueError("System prompt not specified.")
     else:
@@ -862,8 +878,12 @@ def main() -> None:
     # determine rows to annotate
     todo_idx = [idx for idx in df.index if idx not in completed_rows]
     if args.debug:
-        todo_idx = todo_idx[:10]
+        todo_idx = todo_idx[10:20]
         logging.info("Debug mode: first 10 only")
+        debug_dir = os.path.join(args.output_dir, "debug")
+        os.makedirs(debug_dir, exist_ok=True)
+        output_path = os.path.join(debug_dir, os.path.basename(output_path))
+        output_path = output_path.replace(".csv", "_debug.csv")
         logging.info(f"Debug output will be saved to: {output_path}")
 
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
@@ -873,6 +893,7 @@ def main() -> None:
         user_meta = _format_local_context_narrative(idx, df)
 
         try:
+            # print('system_prompt:', system_prompt)
             anno, raws = _annotate_row(
                 idx,
                 df,
@@ -893,9 +914,11 @@ def main() -> None:
             if args.debug:
                 print("\n--- Generation for row", idx, "---")
                 try:
+                    # system_prompt = json.loads(raws[-1]["prompt"])[0]["content"]
                     user_prompt = json.loads(raws[-1]["prompt"])[1]["content"]
                 except Exception:
                     user_prompt = "[[ Could not parse user prompt ]]"
+                # print("System Prompt:\n", system_prompt)
                 print("Prompt:\n", user_prompt)
                 print("\nResponse:\n", raws[-1]["response"])
                 print("--- end of generation ---\n")
