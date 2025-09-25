@@ -118,6 +118,7 @@ ALLOWED_ACTS: List[str] = [
     "Claim",
     "Congratulate",
     "Desire (Irrealis)",
+    "Desire",
     "Direct",
     "Elaborate",
     "Greet",
@@ -493,7 +494,9 @@ def _get_model_client(model: str):
             import anthropic
         except ImportError:
             raise ImportError("Install with: pip install anthropic")
-
+        from dotenv import load_dotenv, find_dotenv
+        load_dotenv(find_dotenv())  # loads .env from the repo (searches upward)
+        # --- end addition ---
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError(
@@ -507,7 +510,8 @@ def _get_model_client(model: str):
             import google.generativeai as genai
         except ImportError:
             raise ImportError("Install with: pip install google-generativeai")
-
+        from dotenv import load_dotenv, find_dotenv
+        load_dotenv(find_dotenv())  # loads .env from the repo (searches upward)
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError(
@@ -849,7 +853,7 @@ def main() -> None:
     client, client_type = _get_model_client(args.model)
 
     # load system prompt
-    system_prompt_path = Path("system_prompt.md")
+    system_prompt_path = Path("system_prompt_0910.md")
     if not system_prompt_path.exists():
         raise ValueError("System prompt not specified.")
     else:
@@ -858,8 +862,8 @@ def main() -> None:
     # determine rows to annotate
     todo_idx = [idx for idx in df.index if idx not in completed_rows]
     if args.debug:
-        todo_idx = todo_idx[:5]
-        logging.info("Debug mode: first 5 only")
+        todo_idx = todo_idx[:10]
+        logging.info("Debug mode: first 10 only")
         logging.info(f"Debug output will be saved to: {output_path}")
 
     pbar = tqdm(todo_idx, desc="Annotating", unit="row")
