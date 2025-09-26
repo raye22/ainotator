@@ -240,8 +240,8 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
     msg_text = str(row["Message"]).strip()
 
     # start narrative
-    narrative = f'**Local Context**: We will be annotating Utterance #{row_idx} from {user_id}:\n"{msg_text}"\n'
-
+    narrative = f'We will be annotating Utterance #{row_idx} from Message #{msg_id} by {user_id}:\n"{msg_text}"\n'
+    narrative += '\n**Local Context**:'
     mask = df["Msg#"].eq(msg_id)
     rows = df.loc[mask]
     msgs = rows["Message"].astype(str).fillna("").map(str.strip)
@@ -249,13 +249,13 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
         # Concatenate all utterances into a single message (space-separated)
         if category == "Original post":
             narrative += (
-                "This is part of the thread message. "
+                "\nThe Utterance is part of the thread message. Read the full thread starter message for context."
             )
         else:
             full_message = " ".join(m for m in msgs if m)
             narrative += (
-                f"This utterance is part of the full message:\n{full_message}\n\n"
-                f'You are asked only to annotate the utterance "{msg_text}".'
+                f"\nThis utterance is part of the full message:\n\"{full_message}\"\n\n"
+                f'You are asked only to annotate the Utterance #{row_idx}".'
             )
     if pd.notna(reply_to) and reply_to != "N/A":
         referred_df = df[(df["User ID"] == reply_to) & (df.index < row_idx)]
@@ -266,43 +266,50 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
                     f"Read the thread starter message for the context."
                 )
             else:
+                referred_df = referred_df[referred_df['Category'] != 'Original post']
                 narrative += (
                     f'\nUtterance #{row_idx} is a reply to user "{reply_to}". '
                     f"The following earlier messages by {reply_to} may help contextualize the reply:"
                 )
-                for _, r in referred_df.iterrows():
+                # Group by Msg# and combine utterances into full messages
+                msg_groups = referred_df.groupby("Msg#")["Message"].apply(
+                    lambda x: " ".join(str(msg).strip() for msg in x)
+                ).reset_index()
+                
+                for _, msg_row in msg_groups.iterrows():
                     narrative += (
-                        f'\n- Utterance #{r["Msg#"]}: "{str(r["Message"]).strip()}"'
+                        f'\n- Message #{msg_row["Msg#"]}: "{msg_row["Message"]}"'
                     )
 
     # find the first earlier message from the same user (different message ID)
-    same_user_earlier_mask = (df["User ID"] == user_id) & (df.index < row_idx)
-    if same_user_earlier_mask.any():
-        # get all earlier messages from same user and find the most recent different msg_id
-        earlier_msgs = df[same_user_earlier_mask]
-        different_msg_ids = earlier_msgs[earlier_msgs["Msg#"] != msg_id]["Msg#"]
-        # first_earlier_msg_id=earlier_msgs["Msg#"].iloc[-1]
-        if not different_msg_ids.empty:
-            first_earlier_msg_id = different_msg_ids.iloc[-1]  # most recent different msg id
-            # get all utterances with that msg id and combine them
-            same_msg_utterances = df[df["Msg#"] == first_earlier_msg_id]["Message"].astype(str).str.strip()
-            combined_earlier_msg = " ".join(same_msg_utterances)
-            narrative += f"\n\nPrevious message from {user_id} in this thread:"
-            narrative += f'\n- Message #{first_earlier_msg_id}: "{combined_earlier_msg}"'
+    if category != "Original post":
+        same_user_earlier_mask = (df["User ID"] == user_id) & (df.index < row_idx) & (df['Reply to_ID'] == reply_to) 
+        if same_user_earlier_mask.any():
+            # get all earlier messages from same user and find the most recent different msg_id
+            earlier_msgs = df[same_user_earlier_mask]
+            different_msg_ids = earlier_msgs[earlier_msgs["Msg#"] != msg_id]["Msg#"]
+            # first_earlier_msg_id=earlier_msgs["Msg#"].iloc[-1]
+            if not different_msg_ids.empty:
+                first_earlier_msg_id = different_msg_ids.iloc[-1]  # most recent different msg id
+                # get all utterances with that msg id and combine them
+                same_msg_utterances = df[df["Msg#"] == first_earlier_msg_id]["Message"].astype(str).str.strip()
+                combined_earlier_msg = " ".join(same_msg_utterances)
+                narrative += f"\n\nPrevious message from {user_id} in this thread:"
+                narrative += f'\n- Message #{first_earlier_msg_id}: "{combined_earlier_msg}"'
 
-    # find the first later message from the same user (different message ID)
-    same_user_later_mask = (df["User ID"] == user_id) & (df.index > row_idx) & (df['Reply to_ID'] == reply_to)
-    if same_user_later_mask.any():
-        # get all later messages from same user and find the first different msg_id
-        later_msgs = df[same_user_later_mask]
-        different_msg_ids = later_msgs[later_msgs["Msg#"] != msg_id]["Msg#"]
-        if not different_msg_ids.empty:
-            first_later_msg_id = different_msg_ids.iloc[0]  # first different msg id
-            # get all utterances with that msg id and combine them
-            same_msg_utterances = df[df["Msg#"] == first_later_msg_id]["Message"].astype(str).str.strip()
-            combined_later_msg = " ".join(same_msg_utterances)
-            narrative += f"\n\nNext message from {user_id} in this thread:"
-            narrative += f'\n- Message #{first_later_msg_id}: "{combined_later_msg}"'
+        # find the first later message from the same user (different message ID)
+        same_user_later_mask = (df["User ID"] == user_id) & (df.index > row_idx) & (df['Reply to_ID'] == reply_to)
+        if same_user_later_mask.any():
+            # get all later messages from same user and find the first different msg_id
+            later_msgs = df[same_user_later_mask]
+            different_msg_ids = later_msgs[later_msgs["Msg#"] != msg_id]["Msg#"]
+            if not different_msg_ids.empty:
+                first_later_msg_id = different_msg_ids.iloc[0]  # first different msg id
+                # get all utterances with that msg id and combine them
+                same_msg_utterances = df[df["Msg#"] == first_later_msg_id]["Message"].astype(str).str.strip()
+                combined_later_msg = " ".join(same_msg_utterances)
+                narrative += f"\n\nNext message from {user_id} in this thread:"
+                narrative += f'\n- Message #{first_later_msg_id}: "{combined_later_msg}"'
 
     # find first replies to this utterance from other users
     later_replies = df[
@@ -311,9 +318,19 @@ def _format_local_context_narrative_soyeon(row_idx: int, df: pd.DataFrame) -> st
         & (df["User ID"] != user_id)
     ]
     if not later_replies.empty:
-        narrative += f"\n\nOther users also replied to {user_id} afterward. Here are some such replies:"
-        for _, rep in later_replies.head(3).iterrows():
-            narrative += f'\n- Utterance #{rep["Msg#"]} from {rep["User ID"]}: "{str(rep["Message"]).strip()}"'
+        narrative += f"\n\nOther users replied to {user_id} afterward. Here are some such replies:"
+        
+        # Group by Msg# and combine utterances into full messages
+        # Get first two unique message IDs and their combined utterances
+        unique_msg_ids = later_replies["Msg#"].unique()[:2]
+        reply_msg_groups = later_replies[later_replies["Msg#"].isin(unique_msg_ids)].groupby("Msg#")["Message"].apply(
+            lambda x: " ".join(str(msg).strip() for msg in x)
+        ).reset_index()
+        
+        for _, msg_row in reply_msg_groups.iterrows():
+            # Get the user ID for this message
+            reply_user = later_replies[later_replies["Msg#"] == msg_row["Msg#"]]["User ID"].iloc[0]
+            narrative += f'\n- Message #{msg_row["Msg#"]} from {reply_user}: "{msg_row["Message"]}"'
 
     return narrative
 
@@ -431,12 +448,12 @@ def _build_messages(
     reasoning_block = (
         "\n**Reasoning**: Provide step-by-step analysis inside [REASON]…[/REASON] before your final answer. "
         "Follow the annotation procedure: "
-        "1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages "
+        "1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages,"
         "2. **Pay close attention to the speaker's intent in context, not only the surface form of the message** - what is the primary communicative goal? "
-        "3. **Consider 2-3 most plausible options** and then select the primary communicative function, politeness (if strong enough), and meta-act (and subtype) when appropriate "
-        "4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions) "
-        "5. **Check for meta-acts** - is this reported perspective, or non-bona fide speech such as sarcasm, irony, or a rhetorical question? "
-        "6. **When reasoning is requested**, think aloud step-by-step inside [REASON]…[/REASON] following steps 1-5"
+        "3. **Consider 2-3 most plausible act options**,"
+        "4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions), "
+        "5. **Check for meta-acts**: is this a reported perspective? is this non-bona fide speech such as sarcasm, irony, or a rhetorical question? "
+        "Think aloud step-by-step, and select the primary communicative function, politeness (if strong enough), and meta-acts (and subtype) when appropriate."
     )
 
     if model_tag == "o3":
@@ -891,12 +908,22 @@ def main() -> None:
     # build dynamic global context
     if "Category" in df.columns:  # Soyeon layout
         thread_summary = BACKGROUND_SOYEON
-        original_posts = (
-            df[df["Category"] == "Original post"]["Message"].dropna().tolist()
-        )
+        # Group original post utterances by Msg# to form complete messages
+        original_post_df = df[df["Category"] == "Original post"]
+        original_posts = []
+        for msg_id in original_post_df["Msg#"].unique():
+            msg_utterances = original_post_df[original_post_df["Msg#"] == msg_id]["Message"].dropna()
+            complete_message = " ".join(msg_utterances.astype(str))
+            original_posts.append(complete_message)
     else:  # Yusra layout
         thread_summary = BACKGROUND_YUSRA
-        original_posts = df[df["Msg#"] == 1]["Message"].dropna().tolist()
+        # Group utterances by Msg# to form complete messages
+        msg_1_df = df[df["Msg#"] == 1]
+        original_posts = []
+        for msg_id in msg_1_df["Msg#"].unique():
+            msg_utterances = msg_1_df[msg_1_df["Msg#"] == msg_id]["Message"].dropna()
+            complete_message = " ".join(msg_utterances.astype(str))
+            original_posts.append(complete_message)
 
     dynamic_global_context = "\n\n".join(
         [
@@ -918,7 +945,7 @@ def main() -> None:
     # determine rows to annotate
     todo_idx = [idx for idx in df.index if idx not in completed_rows]
     if args.debug:
-        todo_idx = todo_idx[10:20]
+        todo_idx = todo_idx[0:20]
         logging.info("Debug mode: first 10 only")
         debug_dir = os.path.join(args.output_dir, "debug")
         os.makedirs(debug_dir, exist_ok=True)

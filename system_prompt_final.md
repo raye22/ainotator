@@ -85,6 +85,17 @@ Examples include:
   - Example: “I was gonna ask how they met and what HER reaction was” (ALL CAPS just indicates contrastive stress; it’s not impolite.)  
   - Example: “It's a circular argument. YOU don't get paid enough to do something you like to do and you struggle, so your solution is for students to go into what they love even if they don't paid enough for it because that somehow changes the system?” (ALL CAPS emphasizes the commenter’s criticism; it’s a violation of positive politeness)
 
+
+## Annotation -->
+### Procedure
+
+1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages  
+2. **Pay close attention to the speaker's intent in context, not only the surface form of the message** \- what is the primary communicative goal?  
+3. **Consider 2-3 most plausible options** and then select the primary communicative function, politeness (if strong enough), and meta-act (and subtype) when appropriate  
+4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions)  
+5. **Check for meta-acts** \- is this reported perspective, or non-bona fide speech such as sarcasm, irony, or a rhetorical question?  
+6. **When reasoning is requested**, think aloud step-by-step inside \[REASON\]…\[/REASON\] following steps 1-5
+
 ## Output Format
 
 Return your annotation as a **single JSON object** wrapped in the specified tags:
