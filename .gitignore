@@ -1,3 +1,5 @@
 .env
 .env.*
 test.ipynb
+annotations/debug/*
+__pycache__/
