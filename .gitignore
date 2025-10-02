@@ -1,7 +1,7 @@
 .env
 .env.*
 test.ipynb
-annotations/debug/*
+annotations/*
 __pycache__/
 system_prompt_0910.md
 system_prompt_0919.md

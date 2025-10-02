@@ -441,21 +441,33 @@ def _build_messages(
         "then decide on the communicative act of the target utterance, its politeness value (if clearly expressed), "
         "and any applicable meta-acts. Use the CMC Communicative Act Taxonomy developed by Herring, Das, and Penumarthy (2005), "
         "revised in 2024 by Herring and Ge-Stadnyk, to guide your annotation. For politeness and impoliteness, refer to Herring (1994) "
-        "and Culpeper's (2011a) frameworks. For meta-acts such as reported and non-bona fide speech, follow the definitions included in the taxonomy."
+        "and Culpeper's (2011a) frameworks. For meta-acts such as reported perspective and non-bona fide, follow the definitions included in the taxonomy."
     )
 
     # ALWAYS include reasoning instructions
+    # reasoning_block = (
+    #     "\n**Reasoning**: Provide step-by-step analysis inside [REASON]…[/REASON] before your final answer. "
+    #     "Follow the annotation procedure:"
+    #     "1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages,"
+    #     "2. **Pay close attention to the speaker's intent in context, not only the surface form of the message** - what is the primary communicative goal? "
+    #     "3. **Consider 2-3 most plausible act options**,"
+    #     "4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions), "
+    #     "5. **Check for meta-acts**: is this reported perspective? Is it non-bona fide speech such as sarcasm, irony, or a rhetorical question? "
+    #     "Think aloud step-by-step, and select the primary communicative function, politeness (if strong enough), and meta-acts (and subtype) when appropriate."
+    # )
+
     reasoning_block = (
         "\n**Reasoning**: Provide step-by-step analysis inside [REASON]…[/REASON] before your final answer. "
-        "Follow the annotation procedure: "
-        "1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages,"
+        "Follow the annotation procedure:"
+        "1. **Read the target utterance carefully** in relation to the supplied context, including background story, preceding and following messages. "
         "2. **Pay close attention to the speaker's intent in context, not only the surface form of the message** - what is the primary communicative goal? "
-        "3. **Consider 2-3 most plausible act options**,"
-        "4. **Evaluate politeness/impoliteness** only if clearly expressed (not neutral interactions), "
-        "5. **Check for meta-acts**: is this a reported perspective? is this non-bona fide speech such as sarcasm, irony, or a rhetorical question? "
+        "3. **For the two meta-act codes:** "
+        "- **Check whether there is reported perspective in the utterance.** This is often found in an embedded clause. If there is reported content and it is the most important information in the utterance in the context in which it appears, code the meta-act as \"reported\" and focus on that part when assigning an act code later. Otherwise, do not assign \"reported\" and instead focus on the main proposition when assigning the speech act later. "
+        "- **Check whether the utterance is bona fide or non-bona fide.** If non-bona fide, assign the meta-act code as \"Non-bona fide\" and code the utterance for speech act as if it were sincere. "
+        "4. 4. **Consider the 2-3 most plausible act options**, and then select the primary communicative function based on the part of the utterance identified in step 3. "
+        "5. **Code for politeness/impoliteness** only if clearly expressed or inferrable from the context (not neutral interactions). "
         "Think aloud step-by-step, and select the primary communicative function, politeness (if strong enough), and meta-acts (and subtype) when appropriate."
-    )
-
+        )
     if model_tag == "o3":
         reasoning_block += (
             "\nIf you used hidden or internal reasoning anywhere, copy **all** of that "
@@ -466,7 +478,7 @@ def _build_messages(
     format_block = (
         f"\n**Output Format**: First provide your step-by-step reasoning inside {REASON_START}…{REASON_END}, "
         f"then return the annotation as one JSON object wrapped EXACTLY like:\n"
-        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","meta":"< META >","non-bona fide":"<NON_BONA_FIDE>"}}{END_TAG}'
+        f'{START_TAG}{{"act":"<ACT>","politeness":"<POL>","self/reported":"< META >","non-bona fide":"<NON_BONA_FIDE>"}}{END_TAG}'
     )
 
     return [
@@ -516,7 +528,7 @@ def _parse_annotation(text: str) -> Dict:
             raise ValueError(f"invalid politeness: {pol}")
 
     # 3) meta tags_reported
-    meta_field = str(anno.get("meta", "") or "").strip()
+    meta_field = str(anno.get("self/reported", "") or "").strip()
 
     clean_meta: List[str] = []
     for tag in [t.strip() for t in meta_field.split(",") if t.strip()]:
@@ -650,6 +662,7 @@ def _annotate_row(
                 resp = client.chat.completions.create(
                     model=model,
                     messages=messages,
+                    # do_sample=False,
                     temperature=0.6,
                     top_p=0.9,
                     max_tokens=10240,
@@ -670,7 +683,8 @@ def _annotate_row(
                 resp = client.messages.create(
                     model=model,
                     max_tokens=10240,
-                    temperature=0.6,
+                    temperature=0,
+                    top_p=1,
                     system=system_content,
                     messages=[{"role": "user", "content": user_content}],
                 )
@@ -684,12 +698,12 @@ def _annotate_row(
 
             elif client_type == "gemini":
                 prompt_text = f"{messages[0]['content']}\n\n{messages[1]['content']}"
-
+                # change the temperature to 0 for Gemini
                 resp = client.generate_content(
                     prompt_text,
                     generation_config={
-                        "temperature": 0.6,
-                        "top_p": 0.9,
+                        "temperature": 0,
+                        "top_p": 1,
                         "max_output_tokens": 10240,
                     },
                 )
